@@ -18,22 +18,19 @@ public class DataLoader implements CommandLineRunner {
     
     @Override
     public void run(String... args) {
-        // Limpa dados anteriores (opcional)
         userRepository.deleteAll();
         
-        // Cria usuário normal - ✅ COM ROLE_
         User user = new User();
         user.setUsername("user");
         user.setPassword(passwordEncoder.encode("password"));
-        user.setRole("ROLE_USER");  // ✅ Corrigido!
+        user.setRole("ROLE_USER");
         user.setEnabled(true);
         userRepository.save(user);
         
-        // Cria admin - ✅ COM ROLE_
         User admin = new User();
         admin.setUsername("admin");
         admin.setPassword(passwordEncoder.encode("admin"));
-        admin.setRole("ROLE_ADMIN");  // ✅ Corrigido!
+        admin.setRole("ROLE_ADMIN");
         admin.setEnabled(true);
         userRepository.save(admin);
         

@@ -1,6 +1,8 @@
 package com.atwo.paganois.services;
 
 
+import com.atwo.paganois.dtos.LoginRequest;
+import com.atwo.paganois.dtos.LoginResponse;
 import com.atwo.paganois.entities.User;
 import com.atwo.paganois.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     
     @Autowired
     private UserRepository userRepository;
+
+    // public LoginResponse login(LoginRequest loginRequest) {
+
+    // }
     
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
