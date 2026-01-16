@@ -1,16 +1,23 @@
 package com.atwo.paganois.entities;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
-public class User {
-    // implements UserDetails
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,15 +29,16 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private String role; // ROLE_USER, ROLE_ADMIN
+    @JoinColumn(name = "role_id")
+    @ManyToOne
+    private Role role;
 
     private boolean enabled = true;
 
     public User() {
     }
 
-    public User(Long id, String username, String password, String role, boolean enabled) {
+    public User(Long id, String username, String password, Role role, boolean enabled) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -62,11 +70,11 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
@@ -76,6 +84,15 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(role);
+    }
+
+    public boolean hasRole(String roleName) {
+        return role.getAuthority().equals(roleName);
     }
 
     @Override
@@ -108,12 +125,5 @@ public class User {
             return false;
         return true;
     }
-
-    // @Override
-    // public Collection<? extends GrantedAuthority> getAuthorities() {
-    // // TODO Auto-generated method stub
-    // throw new UnsupportedOperationException("Unimplemented method
-    // 'getAuthorities'");
-    // }
 
 }
