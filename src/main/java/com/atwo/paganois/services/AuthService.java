@@ -74,7 +74,6 @@ public class AuthService {
         User newUser = new User();
         newUser.setUsername(registerRequest.getUsername());
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        // newUser.setPassword(registerRequest.getPassword());
         newUser.setRole(roleRepository.findByAuthority("ROLE_USER"));
         newUser.setEnabled(true);
 

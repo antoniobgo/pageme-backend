@@ -1,6 +1,10 @@
 package com.atwo.paganois.controllers.handlers;
 
-import com.atwo.paganois.dtos.ErrorResponse;
+import com.atwo.paganois.dtos.CustomErrorResponse;
+import com.atwo.paganois.exceptions.UserAlreadyExistsException;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -11,33 +15,48 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
+    // @ExceptionHandler(ForbiddenException.class)
+    // public ResponseEntity<CustomError> forbidden(ForbiddenException e,
+    // HttpServletRequest request) {
+    // HttpStatus status = HttpStatus.FORBIDDEN;
+    // CustomError err = new CustomError(Instant.now(), status.value(),
+    // e.getMessage(), request.getRequestURI());
+    // return ResponseEntity.status(status).body(err);
+    // }
+    //
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException e) {
-        return ResponseEntity
-            .status(HttpStatus.UNAUTHORIZED)
-            .body(new ErrorResponse("Invalid username or password"));
+    public ResponseEntity<CustomErrorResponse> handleBadCredentials(BadCredentialsException e,
+            HttpServletRequest request) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(), e.getMessage(),
+                request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
     }
-    
+
     @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<ErrorResponse> handleDisabled(DisabledException e) {
-        return ResponseEntity
-            .status(HttpStatus.FORBIDDEN)
-            .body(new ErrorResponse("Account is disabled"));
+    public ResponseEntity<CustomErrorResponse> handleDisabled(DisabledException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(), e.getMessage(),
+                request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
     }
-    
+
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(UsernameNotFoundException e) {
-        return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(new ErrorResponse(e.getMessage()));
+    public ResponseEntity<CustomErrorResponse> handleUserNotFound(UsernameNotFoundException e,
+            HttpServletRequest request) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(), e.getMessage(),
+                request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
     }
-    
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
@@ -49,12 +68,23 @@ public class GlobalExceptionHandler {
         });
         return ResponseEntity.badRequest().body(errors);
     }
-    
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneral(Exception e) {
-        e.printStackTrace();  // Log do erro
-        return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(new ErrorResponse("An unexpected error occurred"));
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<CustomErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException e,
+            HttpServletRequest request) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(), e.getMessage(),
+                request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
     }
+
+    // TODO: fazer esse general handler
+
+    // @ExceptionHandler(Exception.class)
+    // public ResponseEntity<CustomErrorResponse> handleGeneral(Exception e) {
+    // e.printStackTrace(); // Log do erro
+    // return ResponseEntity
+    // .status(HttpStatus.INTERNAL_SERVER_ERROR)
+    // .body(new CustomErrorResponse("An unexpected error occurred"));
+    // }
 }
