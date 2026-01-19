@@ -21,7 +21,7 @@ public class TestController {
     }
     
     @GetMapping("/admin/hello")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public String adminEndpoint() {
         return "Hello Admin!";
     }

@@ -81,4 +81,6 @@ public class AuthService {
 
         return new RegisterResponse(savedUser.getId(), savedUser.getUsername());
     }
+
+    // public getUserByJwt i
 }

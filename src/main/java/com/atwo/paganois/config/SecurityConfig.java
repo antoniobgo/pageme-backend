@@ -41,12 +41,14 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
 
                         // Endpoints protegidos
-                        // TODO: verificar se nao  ha redundancia de autorização
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                        // TODO: verificar se controle de autorização será feito aqui
+                        //       ou nos controllers 
+                        // .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
 
                         // Qualquer outra coisa precisa autenticação
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated()
+                    )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
