@@ -18,9 +18,6 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
     
-    /**
-     * Envia email simples (texto puro)
-     */
     public void sendSimpleEmail(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
@@ -30,10 +27,7 @@ public class EmailService {
         
         mailSender.send(message);
     }
-    
-    /**
-     * Envia email HTML
-     */
+
     public void sendHtmlEmail(String to, String subject, String htmlContent) 
             throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();

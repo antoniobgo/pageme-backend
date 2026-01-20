@@ -58,6 +58,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // TODO: Verificar melhor implementação de authenticationProvider
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
