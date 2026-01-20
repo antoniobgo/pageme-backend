@@ -26,6 +26,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         return userRepository.existsByUsername(username);
     }
 
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
     public UserDTO getAuthenticatedUserProfile(UserDetails user) {
         if (!user.isEnabled())
             throw new AccountDisabledException("Conta desativada");

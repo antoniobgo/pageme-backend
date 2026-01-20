@@ -42,14 +42,18 @@ public class DataLoader implements CommandLineRunner {
         user.setUsername("user");
         user.setPassword(passwordEncoder.encode("password"));
         user.setRole(roleUser);
+        user.setEmail("user@user.com");
         user.setEnabled(true);
+        user.setEmailVerified(true);
         userRepository.save(user);
         
         User admin = new User();
         admin.setUsername("admin");
         admin.setPassword(passwordEncoder.encode("admin"));
         admin.setRole(roleAdmin);
+        admin.setEmail("admin@admin.com");
         admin.setEnabled(true);
+        admin.setEmailVerified(true);
         userRepository.save(admin);
         
         System.out.println("✅ Users created:");

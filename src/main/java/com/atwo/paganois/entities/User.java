@@ -29,21 +29,24 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(unique = true, nullable = false)
+    private String email;
+
     @JoinColumn(name = "role_id")
     @ManyToOne
     private Role role;
 
     private boolean enabled = true;
+    private boolean emailVerified = false;
 
     public User() {
     }
 
-    public User(Long id, String username, String password, Role role, boolean enabled) {
+    public User(Long id, String username, String password, Role role) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.role = role;
-        this.enabled = enabled;
     }
 
     public Long getId() {
@@ -79,7 +82,7 @@ public class User implements UserDetails {
     }
 
     public boolean isEnabled() {
-        return enabled;
+        return enabled && emailVerified;
     }
 
     public void setEnabled(boolean enabled) {
@@ -93,6 +96,22 @@ public class User implements UserDetails {
 
     public boolean hasRole(String roleName) {
         return role.getAuthority().equals(roleName);
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 
     @Override

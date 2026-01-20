@@ -25,6 +25,9 @@ public class AuthService {
     private CustomUserDetailsService userDetailsService;
 
     @Autowired
+    private VerificationService verificationService;
+
+    @Autowired
     private RoleRepository roleRepository;
 
     @Autowired
@@ -68,16 +71,21 @@ public class AuthService {
     }
 
     public RegisterResponse register(RegisterRequest registerRequest) {
-        if (userDetailsService.existsByUsername(registerRequest.getUsername()))
-            throw new UserAlreadyExistsException("Username já está em uso");
+        if (userDetailsService.existsByUsername(registerRequest.getUsername())
+                || userDetailsService.existsByEmail(registerRequest.getEmail()))
+            throw new UserAlreadyExistsException("Username ou email já está em uso");
 
         User newUser = new User();
         newUser.setUsername(registerRequest.getUsername());
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         newUser.setRole(roleRepository.findByAuthority("ROLE_USER"));
-        newUser.setEnabled(true);
+
+        // TODO: salvar email antes da confirmação?
+        newUser.setEmail(registerRequest.getEmail());
 
         User savedUser = userDetailsService.save(newUser);
+
+        verificationService.sendEmailVerification(savedUser);
 
         return new RegisterResponse(savedUser.getId(), savedUser.getUsername());
     }

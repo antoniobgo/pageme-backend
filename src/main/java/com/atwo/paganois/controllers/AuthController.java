@@ -38,6 +38,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+
         RegisterResponse response = authService.register(request);
 
         URI location = ServletUriComponentsBuilder
