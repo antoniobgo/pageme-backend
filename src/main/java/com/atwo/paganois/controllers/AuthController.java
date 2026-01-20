@@ -45,7 +45,6 @@ public class AuthController {
                 .path("/api/users/{id}")
                 .buildAndExpand(response.id())
                 .toUri();
-
         return ResponseEntity.created(location).body(response);
     }
 }
