@@ -50,12 +50,13 @@ public class VerificationService {
         
         // Envia email
         emailService.sendSimpleEmail(
-            user.getEmail(), // assumindo que username é o email
+            user.getEmail(),
             "Confirme seu email - Paganois",
             "Por favor, confirme seu email clicando no link: \n"+confirmationUrl
         );
     }
     
+    //TODO: tratar as excessões (e especializar)
     @Transactional
     public boolean verifyEmail(String token) {
         VerificationToken verificationToken = tokenRepository

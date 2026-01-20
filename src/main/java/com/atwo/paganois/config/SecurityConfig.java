@@ -39,16 +39,25 @@ public class SecurityConfig {
                         // Endpoints públicos
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        // .requestMatchers(
+                        //         "/auth/login",
+                        //         "/auth/register",
+                        //         "/auth/refresh",
+                        //         "/auth/verify-email",
+                        //         "/auth/resend-verification",
+                        //         "/auth/forgot-password",
+                        //         "/auth/reset-password")
+                        // .permitAll()
 
                         // Endpoints protegidos
                         // TODO: verificar se controle de autorização será feito aqui
-                        //       ou nos controllers 
+                        // ou nos controllers
                         // .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
 
                         // Qualquer outra coisa precisa autenticação
-                        .anyRequest().authenticated()
-                    )
+                        .anyRequest().authenticated())
+                        // .anyRequest().permitAll())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

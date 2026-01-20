@@ -87,8 +87,10 @@ public class AuthService {
 
         verificationService.sendEmailVerification(savedUser);
 
-        return new RegisterResponse(savedUser.getId(), savedUser.getUsername());
+        return new RegisterResponse(savedUser.getId(), savedUser.getUsername(), savedUser.isEmailVerified());
     }
 
-    // public getUserByJwt i
+    public void verifyEmail(String token) {
+        verificationService.verifyEmail(token);
+    }
 }
