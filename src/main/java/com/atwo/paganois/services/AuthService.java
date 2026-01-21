@@ -13,13 +13,18 @@ import com.atwo.paganois.dtos.LoginResponse;
 import com.atwo.paganois.dtos.RefreshRequest;
 import com.atwo.paganois.dtos.RegisterRequest;
 import com.atwo.paganois.dtos.RegisterResponse;
+import com.atwo.paganois.entities.TokenType;
 import com.atwo.paganois.entities.User;
+import com.atwo.paganois.entities.VerificationToken;
 import com.atwo.paganois.exceptions.UserAlreadyExistsException;
 import com.atwo.paganois.repositories.RoleRepository;
+import com.atwo.paganois.repositories.UserRepository;
 import com.atwo.paganois.security.JwtUtil;
 
 @Service
 public class AuthService {
+
+    private final UserRepository userRepository;
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
@@ -38,6 +43,10 @@ public class AuthService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    AuthService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public LoginResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -80,7 +89,6 @@ public class AuthService {
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         newUser.setRole(roleRepository.findByAuthority("ROLE_USER"));
 
-        // TODO: salvar email antes da confirmação?
         newUser.setEmail(registerRequest.getEmail());
 
         User savedUser = userDetailsService.save(newUser);
@@ -92,5 +100,17 @@ public class AuthService {
 
     public void verifyEmail(String token) {
         verificationService.verifyEmail(token);
+    }
+
+    public void sendPasswordResetEmail(String email) {
+        verificationService.sendPasswordReset(email);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        VerificationToken tokenEntity = verificationService.validateToken(token, TokenType.PASSWORD_RESET);
+
+        User user = tokenEntity.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }
