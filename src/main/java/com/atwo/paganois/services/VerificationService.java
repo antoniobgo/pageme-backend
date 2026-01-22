@@ -95,7 +95,7 @@ public class VerificationService {
     // TODO: tratar as excessões (e especializar)
     @Transactional
     public boolean verifyEmail(String token) {
-        VerificationToken verificationToken = validateToken(token, null);
+        VerificationToken verificationToken = validateToken(token, TokenType.EMAIL_VERIFICATION);
 
         User user = verificationToken.getUser();
         user.setEmailVerified(true);

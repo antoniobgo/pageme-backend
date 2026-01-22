@@ -64,7 +64,6 @@ public class AuthController {
         authService.resetPassword(token, request.newPassword());
         return ResponseEntity.ok(null);
     }
-    
 
     // TODO: resposta html generico, usar frontend ou adaptar
     @GetMapping("/verify-email")

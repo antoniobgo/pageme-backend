@@ -50,16 +50,5 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
         return user;
-        // ✅ Como salvamos com ROLE_ no banco, usamos .authorities()
-        // return org.springframework.security.core.userdetails.User.builder()
-        // .username(user.getUsername())
-        // .password(user.getPassword())
-        // .authorities(user.getRole()) // ✅ Corrigido! Usa authorities com ROLE_ já
-        // incluso
-        // .accountExpired(false)
-        // .accountLocked(false)
-        // .credentialsExpired(false)
-        // .disabled(!user.isEnabled())
-        // .build();
     }
 }
