@@ -24,7 +24,8 @@ import com.atwo.paganois.security.JwtUtil;
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
@@ -43,10 +44,6 @@ public class AuthService {
 
     @Autowired
     private JwtUtil jwtUtil;
-
-    AuthService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     public LoginResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
