@@ -10,15 +10,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atwo.paganois.dtos.UserDTO;
-import com.atwo.paganois.exceptions.AccountDisabledException;
-import com.atwo.paganois.services.CustomUserDetailsService;
+import com.atwo.paganois.services.UserService;
 
 @RestController
 @RequestMapping(path = "/api/users")
 public class UserController {
 
     @Autowired
-    private CustomUserDetailsService userService;
+    private UserService userService;
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping(path = "/me")

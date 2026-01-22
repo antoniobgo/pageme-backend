@@ -17,33 +17,28 @@ import com.atwo.paganois.entities.TokenType;
 import com.atwo.paganois.entities.User;
 import com.atwo.paganois.entities.VerificationToken;
 import com.atwo.paganois.exceptions.UserAlreadyExistsException;
-import com.atwo.paganois.repositories.RoleRepository;
-import com.atwo.paganois.repositories.UserRepository;
 import com.atwo.paganois.security.JwtUtil;
 
 @Service
 public class AuthService {
 
     @Autowired
-    private UserRepository userRepository;
+    private CustomUserDetailsService userDetailsService;
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private UserService userService;
 
     @Autowired
     private VerificationService verificationService;
 
     @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private JwtUtil jwtUtil;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private PasswordEncoder passwordEncoder;
 
     public LoginResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -69,11 +64,6 @@ public class AuthService {
         String newAccessToken = jwtUtil.generateToken(userDetails);
 
         return new LoginResponse(newAccessToken, refreshToken);
-
-        // TODO: isso nao deveria estar no global exception handler?
-        // return ResponseEntity
-        // .status(HttpStatus.UNAUTHORIZED)
-        // .body(new ErrorResponse("Invalid refresh token"));
     }
 
     public RegisterResponse register(RegisterRequest registerRequest) {
@@ -81,14 +71,8 @@ public class AuthService {
                 || userDetailsService.existsByEmail(registerRequest.getEmail()))
             throw new UserAlreadyExistsException("Username ou email já está em uso");
 
-        User newUser = new User();
-        newUser.setUsername(registerRequest.getUsername());
-        newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        newUser.setRole(roleRepository.findByAuthority("ROLE_USER"));
-
-        newUser.setEmail(registerRequest.getEmail());
-
-        User savedUser = userDetailsService.save(newUser);
+        User savedUser = userService.registerUser(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()),
+                registerRequest.getEmail());
 
         verificationService.sendEmailVerification(savedUser);
 
@@ -96,7 +80,13 @@ public class AuthService {
     }
 
     public void verifyEmail(String token) {
-        verificationService.verifyEmail(token);
+        VerificationToken verificationToken = verificationService.validateToken(token, TokenType.EMAIL_VERIFICATION);
+
+        User user = verificationToken.getUser();
+        user.setEmailVerified(true);
+        userService.save(user);
+
+        verificationService.deleteToken(verificationToken);
     }
 
     public void sendPasswordResetEmail(String email) {
@@ -107,7 +97,7 @@ public class AuthService {
         VerificationToken tokenEntity = verificationService.validateToken(token, TokenType.PASSWORD_RESET);
 
         User user = tokenEntity.getUser();
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+
+        userService.setNewPassword(user, passwordEncoder.encode(newPassword));
     }
 }

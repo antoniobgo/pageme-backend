@@ -10,15 +10,17 @@ public class UserDTO {
     private String username;
     private RoleDTO role;
     private boolean enabled = true;
+    private boolean emailVerified;
 
     public UserDTO() {
     }
 
-    public UserDTO(Long id, String username, RoleDTO role, boolean enabled) {
+    public UserDTO(Long id, String username, RoleDTO role, boolean enabled, boolean emailVerified) {
         this.id = id;
         this.username = username;
         this.role = role;
         this.enabled = enabled;
+        this.emailVerified = emailVerified;
     }
 
     public UserDTO(User entity) {
@@ -26,6 +28,7 @@ public class UserDTO {
         username = entity.getUsername();
         role = new RoleDTO(entity.getRole().getId(), entity.getRole().getAuthority());
         enabled = entity.isEnabled();
+        emailVerified = entity.isEmailVerified();
     }
 
     public UserDTO(UserDetails userDetails) {
@@ -54,6 +57,10 @@ public class UserDTO {
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
     }
 
     private static User convertToUser(UserDetails userDetails) {

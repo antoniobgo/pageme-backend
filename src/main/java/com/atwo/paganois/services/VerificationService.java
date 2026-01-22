@@ -32,16 +32,12 @@ public class VerificationService {
 
     @Transactional
     public void sendPasswordReset(String email) {
-        // throws MessagingException
-        // por segurança:
-        // sem excessão lançada para sempre devolver 200, mesmo que
-        // usuario ou email nao existam
         // TODO: adicionar e tratar exceptions (MessagingException)
         System.out.println("email: " + email);
         Optional<User> optionalUser = userService.findByEmail(email);
         if (optionalUser.isEmpty())
             return;
-        
+
         User user = optionalUser.get();
 
         // Remove tokens antigos
@@ -94,20 +90,6 @@ public class VerificationService {
 
     // TODO: tratar as excessões (e especializar)
     @Transactional
-    public boolean verifyEmail(String token) {
-        VerificationToken verificationToken = validateToken(token, TokenType.EMAIL_VERIFICATION);
-
-        User user = verificationToken.getUser();
-        user.setEmailVerified(true);
-        userService.save(user);
-
-        tokenRepository.delete(verificationToken);
-
-        return true;
-    }
-
-    // TODO: tratar as excessões (e especializar)
-    @Transactional
     public VerificationToken validateToken(String token, TokenType type) {
         VerificationToken tokenEntity = tokenRepository
                 .findByToken(token)
@@ -120,6 +102,10 @@ public class VerificationService {
         }
 
         return tokenEntity;
+    }
+
+    public void deleteToken(VerificationToken verificationToken) {
+        tokenRepository.delete(verificationToken);
     }
 
 }
