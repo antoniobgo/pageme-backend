@@ -27,13 +27,12 @@ Sistema de autenticação e autorização de usuários via JWT utilizando Spring
 
 ## 🎯 Sobre o Projeto
 
-Sistema completo de autenticação RESTful construído com Spring Boot 3, implementando as melhores práticas de segurança e arquitetura de software. O projeto demonstra conhecimentos em:
+Sistema completo de autenticação RESTful construído com Spring Boot 3, tentando implementar as melhores práticas de segurança e arquitetura de software dentro do escopo proposto. O projeto demonstra conhecimentos em:
 
 - 🔒 **Segurança**: JWT (Access + Refresh Tokens), bcrypt password encoding
 - 📧 **Comunicação**: Sistema de envio de emails (verificação e reset de senha)
 - 🏗️ **Arquitetura**: Separação clara de responsabilidades (Services, Controllers, DTOs)
 - ✅ **Qualidade**: Testes unitários com alta cobertura
-- 📚 **Documentação**: Swagger/OpenAPI integrado
 
 ## ✨ Funcionalidades
 
@@ -72,7 +71,6 @@ Sistema completo de autenticação RESTful construído com Spring Boot 3, implem
 
 ### Ferramentas
 - **Maven** - Gerenciamento de dependências
-- **Lombok** (opcional) - Redução de boilerplate
 
 ## 🏛️ Arquitetura
 
@@ -205,6 +203,7 @@ Password: (deixe vazio)
 
 ### Documentação Swagger
 
+### ps: todo swagger
 Acesse a documentação interativa em:
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/v3/api-docs
