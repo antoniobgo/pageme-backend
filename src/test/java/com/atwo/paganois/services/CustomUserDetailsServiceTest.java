@@ -1,11 +1,13 @@
 package com.atwo.paganois.services;
 
-import com.atwo.paganois.dtos.UserDTO;
-import com.atwo.paganois.entities.Role;
-import com.atwo.paganois.entities.User;
-import com.atwo.paganois.exceptions.AccountDisabledException;
-import com.atwo.paganois.exceptions.UserNotFoundException;
-import com.atwo.paganois.repositories.UserRepository;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,12 +19,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.atwo.paganois.entities.Role;
+import com.atwo.paganois.entities.User;
+import com.atwo.paganois.repositories.UserRepository;
 
 /**
  * Testes unitários para CustomUserDetailsService
@@ -119,54 +118,6 @@ class CustomUserDetailsServiceTest {
     }
 
     // ========================================================================
-    // TESTES: save()
-    // ========================================================================
-
-    @Nested
-    @DisplayName("save() - Salvar usuário")
-    class SaveTests {
-
-        @Test
-        @DisplayName("Deveria salvar usuário e retornar usuário salvo")
-        void shouldSaveUser_AndReturnSavedUser() {
-            // Arrange
-            when(userRepository.save(validUser)).thenReturn(validUser);
-
-            // Act
-            User savedUser = userDetailsService.save(validUser);
-
-            // Assert
-            assertThat(savedUser).isNotNull();
-            assertThat(savedUser.getId()).isEqualTo(1L);
-            assertThat(savedUser.getUsername()).isEqualTo("testuser");
-            verify(userRepository, times(1)).save(validUser);
-        }
-
-        @Test
-        @DisplayName("Deveria retornar usuário com ID após salvar novo usuário")
-        void shouldReturnUserWithId_AfterSavingNewUser() {
-            // Arrange
-            User newUser = new User();
-            newUser.setUsername("newuser");
-            newUser.setEmail("new@example.com");
-
-            User savedUser = new User();
-            savedUser.setId(2L);
-            savedUser.setUsername("newuser");
-            savedUser.setEmail("new@example.com");
-
-            when(userRepository.save(newUser)).thenReturn(savedUser);
-
-            // Act
-            User result = userDetailsService.save(newUser);
-
-            // Assert
-            assertThat(result.getId()).isEqualTo(2L);
-            verify(userRepository, times(1)).save(newUser);
-        }
-    }
-
-    // ========================================================================
     // TESTES: existsByUsername()
     // ========================================================================
 
@@ -237,87 +188,6 @@ class CustomUserDetailsServiceTest {
             // Assert
             assertThat(exists).isFalse();
             verify(userRepository, times(1)).existsByEmail("naoexiste@example.com");
-        }
-    }
-
-    // ========================================================================
-    // TESTES: getAuthenticatedUserProfile()
-    // ========================================================================
-
-    @Nested
-    @DisplayName("getAuthenticatedUserProfile() - Obter perfil do usuário autenticado")
-    class GetAuthenticatedUserProfileTests {
-
-        @Test
-        @DisplayName("Deveria retornar UserDTO quando usuário está habilitado e existe")
-        void shouldReturnUserDTO_WhenUserIsValidAndExists() {
-            // Arrange
-            when(userRepository.existsByUsername("testuser")).thenReturn(true);
-
-            // Act
-            UserDTO userDTO = userDetailsService.getAuthenticatedUserProfile(validUser);
-
-            // Assert
-            assertThat(userDTO).isNotNull();
-            assertThat(userDTO.getUsername()).isEqualTo("testuser");
-            verify(userRepository, times(1)).existsByUsername("testuser");
-        }
-
-        @Test
-        @DisplayName("Deveria lançar AccountDisabledException quando conta está desabilitada")
-        void shouldThrowAccountDisabledException_WhenAccountIsDisabled() {
-            // Arrange
-            validUser.setEnabled(false);
-
-            // Act & Assert
-            assertThatThrownBy(() -> userDetailsService.getAuthenticatedUserProfile(validUser))
-                    .isInstanceOf(AccountDisabledException.class)
-                    .hasMessage("Conta desativada");
-
-            // Não deve nem chamar o repository
-            verify(userRepository, never()).existsByUsername(any());
-        }
-
-        @Test
-        @DisplayName("Deveria lançar UserNotFoundException quando usuário não existe no banco")
-        void shouldThrowUserNotFoundException_WhenUserDoesNotExist() {
-            // Arrange
-            when(userRepository.existsByUsername("testuser")).thenReturn(false);
-
-            // Act & Assert
-            assertThatThrownBy(() -> userDetailsService.getAuthenticatedUserProfile(validUser))
-                    .isInstanceOf(UserNotFoundException.class)
-                    .hasMessage("Usuário não encontrado");
-
-            verify(userRepository, times(1)).existsByUsername("testuser");
-        }
-
-        @Test
-        @DisplayName("Deveria verificar enabled antes de verificar existência no banco")
-        void shouldCheckEnabled_BeforeCheckingExistence() {
-            // Arrange
-            validUser.setEnabled(false);
-
-            // Act & Assert
-            assertThatThrownBy(() -> userDetailsService.getAuthenticatedUserProfile(validUser))
-                    .isInstanceOf(AccountDisabledException.class);
-
-            // Verifica que NÃO chamou o repository (falhou antes)
-            verify(userRepository, never()).existsByUsername(any());
-        }
-
-        @Test
-        @DisplayName("Deveria criar UserDTO com dados corretos do UserDetails")
-        void shouldCreateUserDTO_WithCorrectUserDetailsData() {
-            // Arrange
-            when(userRepository.existsByUsername("testuser")).thenReturn(true);
-
-            // Act
-            UserDTO userDTO = userDetailsService.getAuthenticatedUserProfile(validUser);
-
-            // Assert
-            assertThat(userDTO.getUsername()).isEqualTo(validUser.getUsername());
-            assertThat(userDTO.getRole().getAuthority()).isEqualTo(validUser.getRole().getAuthority());
         }
     }
 
@@ -409,50 +279,4 @@ class CustomUserDetailsServiceTest {
         }
     }
 
-    // ========================================================================
-    // TESTES: Cenários de integração entre métodos
-    // ========================================================================
-
-    @Nested
-    @DisplayName("Cenários de integração")
-    class IntegrationScenariosTests {
-
-        @Test
-        @DisplayName("Deveria salvar e depois encontrar usuário por email")
-        void save_shouldSave_WhenIsAValidUser() {
-            // Arrange
-            when(userRepository.save(validUser)).thenReturn(validUser);
-            when(userRepository.findByEmail("test@example.com"))
-                    .thenReturn(Optional.of(validUser));
-
-            // Act
-            User saved = userDetailsService.save(validUser);
-            Optional<User> found = userDetailsService.findByEmail("test@example.com");
-
-            // Assert
-            assertThat(found).isPresent();
-            assertThat(found.get().getEmail()).isEqualTo(saved.getEmail());
-        }
-
-        @Test
-        @DisplayName("Deveria verificar existência antes de tentar carregar usuário")
-        void existsByUsername_shouldCheckExistence_BeforeTryingToLoadUser() {
-            // Arrange
-            when(userRepository.existsByUsername("testuser")).thenReturn(true);
-            when(userRepository.findByUsername("testuser"))
-                    .thenReturn(Optional.of(validUser));
-
-            // Act
-            boolean exists = userDetailsService.existsByUsername("testuser");
-            User loaded = null;
-            if (exists) {
-                loaded = userDetailsService.loadUserByUsername("testuser");
-            }
-
-            // Assert
-            assertThat(exists).isTrue();
-            assertThat(loaded).isNotNull();
-            assertThat(loaded.getUsername()).isEqualTo("testuser");
-        }
-    }
 }

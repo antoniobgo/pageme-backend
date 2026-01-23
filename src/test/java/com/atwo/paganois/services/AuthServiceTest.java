@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -47,16 +48,13 @@ import static org.mockito.Mockito.*;
 class AuthServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Mock
     private CustomUserDetailsService userDetailsService;
 
     @Mock
     private VerificationService verificationService;
-
-    @Mock
-    private RoleRepository roleRepository;
 
     @Mock
     private AuthenticationManager authenticationManager;
@@ -84,6 +82,7 @@ class AuthServiceTest {
     private static final String REFRESH_TOKEN = "refresh.jwt.token";
     private static final String NEW_ACCESS_TOKEN = "new.access.jwt.token";
     private static final String RESET_TOKEN = "reset-token-uuid";
+    private static final String EMAIL_VERIFICATION_TOKEN = "email-verification-token-uuid";
 
     @BeforeEach
     void setUp() {
@@ -330,8 +329,7 @@ class AuthServiceTest {
             when(userDetailsService.existsByUsername(USERNAME)).thenReturn(false);
             when(userDetailsService.existsByEmail(EMAIL)).thenReturn(false);
             when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-            when(userDetailsService.save(any(User.class))).thenReturn(validUser);
+            when(userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL)).thenReturn(validUser);
 
             // Act
             authService.register(registerRequest);
@@ -341,49 +339,21 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("Should assign ROLE_USER to new user")
-        void shouldAssignRoleUser_ToNewUser() {
-            // Arrange
-            when(userDetailsService.existsByUsername(USERNAME)).thenReturn(false);
-            when(userDetailsService.existsByEmail(EMAIL)).thenReturn(false);
-            when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-            when(userDetailsService.save(any(User.class))).thenReturn(validUser);
-
-            ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-
-            // Act
-            authService.register(registerRequest);
-
-            // Assert
-            verify(roleRepository, times(1)).findByAuthority("ROLE_USER");
-            verify(userDetailsService).save(userCaptor.capture());
-            assertThat(userCaptor.getValue().getRole()).isEqualTo(userRole);
-        }
-
-        @Test
         @DisplayName("Should save user with correct details")
         void shouldSaveUser_WithCorrectDetails() {
             // Arrange
             when(userDetailsService.existsByUsername(USERNAME)).thenReturn(false);
             when(userDetailsService.existsByEmail(EMAIL)).thenReturn(false);
             when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-            when(userDetailsService.save(any(User.class))).thenReturn(validUser);
+            when(userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL)).thenReturn(validUser);
 
-            ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+            // ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
             // Act
             authService.register(registerRequest);
 
             // Assert
-            verify(userDetailsService).save(userCaptor.capture());
-            User savedUser = userCaptor.getValue();
-
-            assertThat(savedUser.getUsername()).isEqualTo(USERNAME);
-            assertThat(savedUser.getEmail()).isEqualTo(EMAIL);
-            assertThat(savedUser.getPassword()).isEqualTo(ENCODED_PASSWORD);
-            assertThat(savedUser.getRole()).isEqualTo(userRole);
+            verify(userService, times(1)).registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
         }
 
         @Test
@@ -393,14 +363,16 @@ class AuthServiceTest {
             when(userDetailsService.existsByUsername(USERNAME)).thenReturn(false);
             when(userDetailsService.existsByEmail(EMAIL)).thenReturn(false);
             when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-            when(userDetailsService.save(any(User.class))).thenReturn(validUser);
+            when(userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL)).thenReturn(validUser);
 
             // Act
             authService.register(registerRequest);
 
             // Assert
-            verify(verificationService, times(1)).sendEmailVerification(validUser);
+            // verify(verificationService, times(1)).sendEmailVerification(validUser);
+            InOrder inOrder = inOrder(userService, verificationService);
+            inOrder.verify(userService).registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
+            inOrder.verify(verificationService).sendEmailVerification(validUser);
         }
 
         @Test
@@ -410,8 +382,7 @@ class AuthServiceTest {
             when(userDetailsService.existsByUsername(USERNAME)).thenReturn(false);
             when(userDetailsService.existsByEmail(EMAIL)).thenReturn(false);
             when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-            when(userDetailsService.save(any(User.class))).thenReturn(validUser);
+            when(userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL)).thenReturn(validUser);
 
             // Act
             RegisterResponse response = authService.register(registerRequest);
@@ -421,24 +392,6 @@ class AuthServiceTest {
             assertThat(response.id()).isEqualTo(validUser.getId());
             assertThat(response.username()).isEqualTo(validUser.getUsername());
             assertThat(response.isEmailVerified()).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should check username existence before email")
-        void shouldCheckUsernameExistence_BeforeEmail() {
-            // Arrange
-            when(userDetailsService.existsByUsername(USERNAME)).thenReturn(false);
-            when(userDetailsService.existsByEmail(EMAIL)).thenReturn(false);
-            when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-            when(userDetailsService.save(any(User.class))).thenReturn(validUser);
-
-            // Act
-            authService.register(registerRequest);
-
-            // Assert - both should be called
-            verify(userDetailsService, times(1)).existsByUsername(USERNAME);
-            verify(userDetailsService, times(1)).existsByEmail(EMAIL);
         }
     }
 
@@ -453,31 +406,44 @@ class AuthServiceTest {
         private static final String TOKEN = "verification-token";
 
         @Test
-        @DisplayName("Should delegate to VerificationService")
+        @DisplayName("Should validate valid token")
         void shouldDelegateToVerificationService() {
             // Arrange
-            when(verificationService.verifyEmail(TOKEN)).thenReturn(true);
+            VerificationToken verificationToken;
+            verificationToken = new VerificationToken();
+            verificationToken.setToken(EMAIL_VERIFICATION_TOKEN);
+            verificationToken.setUser(validUser);
+            verificationToken.setType(TokenType.EMAIL_VERIFICATION);
+            verificationToken.setExpiryDate(LocalDateTime.now().plusHours(1));
+            when(verificationService.validateToken(EMAIL_VERIFICATION_TOKEN, TokenType.EMAIL_VERIFICATION))
+                    .thenReturn(verificationToken);
 
             // Act
-            authService.verifyEmail(TOKEN);
+            authService.verifyEmail(EMAIL_VERIFICATION_TOKEN);
 
             // Assert
-            verify(verificationService, times(1)).verifyEmail(TOKEN);
+            verify(verificationService, times(1)).validateToken(EMAIL_VERIFICATION_TOKEN, TokenType.EMAIL_VERIFICATION);
         }
 
         @Test
-        @DisplayName("Should pass token to verification service")
+        @DisplayName("Should set user's emailVerified to true and save")
         void shouldPassToken_ToVerificationService() {
             // Arrange
-            ArgumentCaptor<String> tokenCaptor = ArgumentCaptor.forClass(String.class);
-            when(verificationService.verifyEmail(anyString())).thenReturn(true);
+            VerificationToken verificationToken;
+            verificationToken = new VerificationToken();
+            verificationToken.setToken(EMAIL_VERIFICATION_TOKEN);
+            verificationToken.setUser(validUser);
+            verificationToken.setType(TokenType.EMAIL_VERIFICATION);
+            verificationToken.setExpiryDate(LocalDateTime.now().plusHours(1));
+            when(verificationService.validateToken(EMAIL_VERIFICATION_TOKEN, TokenType.EMAIL_VERIFICATION))
+                    .thenReturn(verificationToken);
 
             // Act
-            authService.verifyEmail(TOKEN);
+            authService.verifyEmail(EMAIL_VERIFICATION_TOKEN);
 
             // Assert
-            verify(verificationService).verifyEmail(tokenCaptor.capture());
-            assertThat(tokenCaptor.getValue()).isEqualTo(TOKEN);
+            verify(userService, times(1)).save(validUser);
+            assertThat(validUser.isEmailVerified()).isTrue();
         }
     }
 
@@ -566,150 +532,19 @@ class AuthServiceTest {
         }
 
         @Test
-        @DisplayName("Should update user password with encoded password")
+        @DisplayName("Should call userService to update user's password with encoded new password")
         void shouldUpdateUserPassword_WithEncodedPassword() {
             // Arrange
             when(verificationService.validateToken(RESET_TOKEN, TokenType.PASSWORD_RESET))
                     .thenReturn(resetToken);
             when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(NEW_ENCODED_PASSWORD);
 
-            ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-
             // Act
             authService.resetPassword(RESET_TOKEN, NEW_PASSWORD);
 
             // Assert
-            verify(userRepository).save(userCaptor.capture());
-            assertThat(userCaptor.getValue().getPassword()).isEqualTo(NEW_ENCODED_PASSWORD);
-        }
 
-        @Test
-        @DisplayName("Should save user after updating password")
-        void shouldSaveUser_AfterUpdatingPassword() {
-            // Arrange
-            when(verificationService.validateToken(RESET_TOKEN, TokenType.PASSWORD_RESET))
-                    .thenReturn(resetToken);
-            when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(NEW_ENCODED_PASSWORD);
-
-            // Act
-            authService.resetPassword(RESET_TOKEN, NEW_PASSWORD);
-
-            // Assert
-            verify(userRepository, times(1)).save(validUser);
-        }
-
-        @Test
-        @DisplayName("Should get user from validated token")
-        void shouldGetUser_FromValidatedToken() {
-            // Arrange
-            when(verificationService.validateToken(RESET_TOKEN, TokenType.PASSWORD_RESET))
-                    .thenReturn(resetToken);
-            when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(NEW_ENCODED_PASSWORD);
-
-            // Act
-            authService.resetPassword(RESET_TOKEN, NEW_PASSWORD);
-
-            // Assert - user from token should be saved
-            verify(userRepository).save(validUser);
-        }
-    }
-
-    // ========================================================================
-    // TESTS: Integration scenarios
-    // ========================================================================
-
-    @Nested
-    @DisplayName("Integration scenarios")
-    class IntegrationTests {
-
-        @Test
-        @DisplayName("Should complete full registration flow")
-        void shouldCompleteFullRegistrationFlow() {
-            // Arrange
-            when(userDetailsService.existsByUsername(USERNAME)).thenReturn(false);
-            when(userDetailsService.existsByEmail(EMAIL)).thenReturn(false);
-            when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
-            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-            when(userDetailsService.save(any(User.class))).thenReturn(validUser);
-
-            // Act
-            RegisterResponse response = authService.register(registerRequest);
-
-            // Assert - verify complete flow
-            verify(userDetailsService).existsByUsername(USERNAME);
-            verify(userDetailsService).existsByEmail(EMAIL);
-            verify(passwordEncoder).encode(PASSWORD);
-            verify(roleRepository).findByAuthority("ROLE_USER");
-            verify(userDetailsService).save(any(User.class));
-            verify(verificationService).sendEmailVerification(validUser);
-
-            assertThat(response.id()).isEqualTo(validUser.getId());
-            assertThat(response.isEmailVerified()).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should complete full login flow")
-        void shouldCompleteFullLoginFlow() {
-            // Arrange
-            when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                    .thenReturn(authentication);
-            when(jwtUtil.generateToken(validUser)).thenReturn(ACCESS_TOKEN);
-            when(jwtUtil.generateRefreshToken(validUser)).thenReturn(REFRESH_TOKEN);
-            when(authentication.getPrincipal()).thenReturn(validUser);
-
-            // Act
-            LoginResponse response = authService.login(loginRequest);
-
-            // Assert - verify complete flow
-            verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-            verify(jwtUtil).generateToken(validUser);
-            verify(jwtUtil).generateRefreshToken(validUser);
-
-            assertThat(response.accessToken()).isNotNull();
-            assertThat(response.refreshToken()).isNotNull();
-        }
-
-        @Test
-        @DisplayName("Should complete full password reset flow")
-        void shouldCompleteFullPasswordResetFlow() {
-            // Arrange - Setup reset token
-            VerificationToken resetToken = new VerificationToken();
-            resetToken.setToken(RESET_TOKEN);
-            resetToken.setUser(validUser);
-            resetToken.setType(TokenType.PASSWORD_RESET);
-            resetToken.setExpiryDate(LocalDateTime.now().plusHours(1));
-
-            when(verificationService.validateToken(RESET_TOKEN, TokenType.PASSWORD_RESET))
-                    .thenReturn(resetToken);
-            when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
-
-            // Act 1: Request password reset
-            authService.sendPasswordResetEmail(EMAIL);
-
-            // Act 2: Reset password with token
-            authService.resetPassword(RESET_TOKEN, "newPassword");
-
-            // Assert - verify complete flow
-            verify(verificationService).sendPasswordReset(EMAIL);
-            verify(verificationService).validateToken(RESET_TOKEN, TokenType.PASSWORD_RESET);
-            verify(passwordEncoder).encode("newPassword");
-            verify(userRepository).save(validUser);
-        }
-
-        @Test
-        @DisplayName("Should not allow registration with existing credentials")
-        void shouldNotAllowRegistration_WithExistingCredentials() {
-            // Arrange
-            when(userDetailsService.existsByUsername(USERNAME)).thenReturn(true);
-
-            // Act & Assert
-            assertThatThrownBy(() -> authService.register(registerRequest))
-                    .isInstanceOf(UserAlreadyExistsException.class);
-
-            // Should not proceed with registration
-            verify(passwordEncoder, never()).encode(anyString());
-            verify(userDetailsService, never()).save(any(User.class));
-            verify(verificationService, never()).sendEmailVerification(any(User.class));
+            verify(userService).setNewPassword(validUser, NEW_ENCODED_PASSWORD);
         }
     }
 }

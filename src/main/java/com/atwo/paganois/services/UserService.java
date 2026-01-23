@@ -1,7 +1,6 @@
 package com.atwo.paganois.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.atwo.paganois.dtos.UserDTO;
@@ -24,7 +23,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public UserDTO getAuthenticatedUserProfile(UserDetails user) {
+    public UserDTO getAuthenticatedUserProfile(User user) {
         if (!user.isEnabled())
             throw new AccountDisabledException("Conta desativada");
         if (!userRepository.existsByUsername(user.getUsername()))
