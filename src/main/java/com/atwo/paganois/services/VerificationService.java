@@ -22,7 +22,7 @@ public class VerificationService {
     private VerificationTokenRepository tokenRepository;
 
     @Autowired
-    private CustomUserDetailsService userService;
+    private CustomUserDetailsService userDetailsService;
 
     @Autowired
     private EmailService emailService;
@@ -33,8 +33,7 @@ public class VerificationService {
     @Transactional
     public void sendPasswordReset(String email) {
         // TODO: adicionar e tratar exceptions (MessagingException)
-        System.out.println("email: " + email);
-        Optional<User> optionalUser = userService.findByEmail(email);
+        Optional<User> optionalUser = userDetailsService.findByEmail(email);
         if (optionalUser.isEmpty())
             return;
 
