@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.atwo.paganois.entities.User;
+import com.atwo.paganois.exceptions.UserNotFoundException;
 import com.atwo.paganois.repositories.UserRepository;
 
 @Service
@@ -23,8 +24,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         return user;
     }
 
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found: " + email));
     }
 
     public boolean existsByUsername(String username) {

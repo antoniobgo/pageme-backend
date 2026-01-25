@@ -18,6 +18,7 @@ import com.atwo.paganois.dtos.LoginResponse;
 import com.atwo.paganois.dtos.RefreshRequest;
 import com.atwo.paganois.dtos.RegisterRequest;
 import com.atwo.paganois.dtos.RegisterResponse;
+import com.atwo.paganois.dtos.ResendEmailVerificationRequest;
 import com.atwo.paganois.dtos.ResetPasswordRequest;
 import com.atwo.paganois.services.AuthService;
 
@@ -56,6 +57,12 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         authService.sendPasswordResetEmail(request.email());
+        return ResponseEntity.ok(null);
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Void> resendVerification(@RequestBody ResendEmailVerificationRequest request) {
+        authService.resendEmailVerification(request.email());
         return ResponseEntity.ok(null);
     }
 

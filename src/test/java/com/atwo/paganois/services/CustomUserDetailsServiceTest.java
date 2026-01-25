@@ -21,6 +21,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import com.atwo.paganois.entities.Role;
 import com.atwo.paganois.entities.User;
+import com.atwo.paganois.exceptions.UserNotFoundException;
 import com.atwo.paganois.repositories.UserRepository;
 
 /**
@@ -73,33 +74,32 @@ class CustomUserDetailsServiceTest {
     class FindByEmailTests {
 
         @Test
-        @DisplayName("Deveria retornar Optional com usuário quando email existe")
+        @DisplayName("Deveria retornar User quando email existe")
         void shouldReturnUser_WhenEmailExists() {
             // Arrange
             when(userRepository.findByEmail("test@example.com"))
                     .thenReturn(Optional.of(validUser));
 
             // Act
-            Optional<User> result = userDetailsService.findByEmail("test@example.com");
+            User result = userDetailsService.findByEmail("test@example.com");
 
             // Assert
-            assertThat(result).isPresent();
-            assertThat(result.get().getEmail()).isEqualTo("test@example.com");
+            assertThat(result.getEmail()).isEqualTo("test@example.com");
             verify(userRepository, times(1)).findByEmail("test@example.com");
         }
 
         @Test
-        @DisplayName("Deveria retornar Optional vazio quando email não existe")
-        void shouldReturnEmpty_WhenEmailDoesNotExist() {
+        @DisplayName("Deveria lançar excessão quando email não existe")
+        void shouldThrowException_WhenEmailDoesNotExist() {
             // Arrange
             when(userRepository.findByEmail("naoexiste@example.com"))
                     .thenReturn(Optional.empty());
 
-            // Act
-            Optional<User> result = userDetailsService.findByEmail("naoexiste@example.com");
+            // Act & Assert
+            assertThatThrownBy(() -> userDetailsService.findByEmail("naoexiste@example.com"))
+                    .isInstanceOf(UserNotFoundException.class)
+                    .hasMessageContaining("User not found: naoexiste@example.com");
 
-            // Assert
-            assertThat(result).isEmpty();
             verify(userRepository, times(1)).findByEmail("naoexiste@example.com");
         }
 
@@ -108,6 +108,7 @@ class CustomUserDetailsServiceTest {
         void shouldDelegateCall_ToRepository() {
             // Arrange
             String email = "any@email.com";
+            when(userRepository.findByEmail(email)).thenReturn(Optional.of(validUser));
 
             // Act
             userDetailsService.findByEmail(email);

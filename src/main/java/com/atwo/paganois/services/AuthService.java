@@ -71,12 +71,25 @@ public class AuthService {
                 || userDetailsService.existsByEmail(registerRequest.getEmail()))
             throw new UserAlreadyExistsException("Username ou email já está em uso");
 
-        User savedUser = userService.registerUser(registerRequest.getUsername(), passwordEncoder.encode(registerRequest.getPassword()),
+        User savedUser = userService.registerUser(registerRequest.getUsername(),
+                passwordEncoder.encode(registerRequest.getPassword()),
                 registerRequest.getEmail());
 
         verificationService.sendEmailVerification(savedUser);
 
         return new RegisterResponse(savedUser.getId(), savedUser.getUsername(), savedUser.isEmailVerified());
+    }
+
+    public void resendEmailVerification(String email) {
+        if (!userDetailsService.existsByUsername(email))
+            throw new RuntimeException("Email não encontrado");
+
+        User user = userDetailsService.findByEmail(email);
+        if (user.isEmailVerified())
+            throw new RuntimeException("Usuário com email já verificado");
+
+        verificationService.sendEmailVerification(user);
+
     }
 
     public void verifyEmail(String token) {

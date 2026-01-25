@@ -1,7 +1,6 @@
 package com.atwo.paganois.services;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +32,7 @@ public class VerificationService {
     @Transactional
     public void sendPasswordReset(String email) {
         // TODO: adicionar e tratar exceptions (MessagingException)
-        Optional<User> optionalUser = userDetailsService.findByEmail(email);
-        if (optionalUser.isEmpty())
-            return;
-
-        User user = optionalUser.get();
+        User user = userDetailsService.findByEmail(email);
 
         // Remove tokens antigos
         tokenRepository.deleteByUserIdAndType(user.getId(), TokenType.PASSWORD_RESET);
@@ -66,6 +61,10 @@ public class VerificationService {
     // TODO: adicionar e tratar exceptions (MessagingException)
     @Transactional
     public void sendEmailVerification(User user) {
+
+        // Remover tokens antigos
+        tokenRepository.deleteByUserIdAndType(user.getId(), TokenType.EMAIL_VERIFICATION);
+
         // Gera token único
         String token = UUID.randomUUID().toString();
 
