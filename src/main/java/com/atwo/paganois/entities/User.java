@@ -82,7 +82,7 @@ public class User implements UserDetails {
     }
 
     public boolean isEnabled() {
-        return enabled && emailVerified;
+        return enabled;
     }
 
     public void setEnabled(boolean enabled) {

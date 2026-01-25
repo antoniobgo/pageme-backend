@@ -81,7 +81,7 @@ public class AuthService {
     }
 
     public void resendEmailVerification(String email) {
-        if (!userDetailsService.existsByUsername(email))
+        if (!userDetailsService.existsByEmail(email))
             throw new RuntimeException("Email não encontrado");
 
         User user = userDetailsService.findByEmail(email);
