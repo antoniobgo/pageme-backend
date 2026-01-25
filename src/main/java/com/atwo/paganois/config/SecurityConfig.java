@@ -39,14 +39,22 @@ public class SecurityConfig {
                         // Endpoints públicos
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**")
+                        .permitAll()
                         // .requestMatchers(
-                        //         "/auth/login",
-                        //         "/auth/register",
-                        //         "/auth/refresh",
-                        //         "/auth/verify-email",
-                        //         "/auth/resend-verification",
-                        //         "/auth/forgot-password",
-                        //         "/auth/reset-password")
+                        // "/auth/login",
+                        // "/auth/register",
+                        // "/auth/refresh",
+                        // "/auth/verify-email",
+                        // "/auth/resend-verification",
+                        // "/auth/forgot-password",
+                        // "/auth/reset-password")
                         // .permitAll()
 
                         // Endpoints protegidos
@@ -57,7 +65,7 @@ public class SecurityConfig {
 
                         // Qualquer outra coisa precisa autenticação
                         .anyRequest().authenticated())
-                        // .anyRequest().permitAll())
+                // .anyRequest().permitAll())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

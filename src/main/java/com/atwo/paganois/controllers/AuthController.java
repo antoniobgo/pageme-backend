@@ -22,26 +22,48 @@ import com.atwo.paganois.dtos.ResendEmailVerificationRequest;
 import com.atwo.paganois.dtos.ResetPasswordRequest;
 import com.atwo.paganois.services.AuthService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Autenticação", description = "Endpoints de autenticação e gerenciamento de usuários")
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
     @PostMapping("/login")
+    @Operation(summary = "Fazer login", description = "Autentica usuário e retorna access token e refresh token JWT")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login realizado com sucesso", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
+    })
+    @SecurityRequirements
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "Renovar access token", description = "Gera novo access token usando refresh token válido")
+    @SecurityRequirements
     public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshRequest request) {
         return ResponseEntity.ok(authService.refresh(request));
     }
 
     @PostMapping("/register")
+    @Operation(summary = "Registrar novo usuário", description = "Cria uma nova conta de usuário e envia email de confirmação")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso", content = @Content(schema = @Schema(implementation = RegisterResponse.class))),
+            @ApiResponse(responseCode = "409", description = "Username ou email já existe")
+    })
+    @SecurityRequirements
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
 
         RegisterResponse response = authService.register(request);
@@ -55,6 +77,11 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
+    @Operation(
+        summary = "Solicitar reset de senha",
+        description = "Envia email com link para redefinir senha"
+    )
+    @SecurityRequirements
     public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         authService.sendPasswordResetEmail(request.email());
         return ResponseEntity.ok(null);
@@ -67,6 +94,11 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
+    @Operation(
+        summary = "Resetar senha",
+        description = "Define nova senha usando token de reset"
+    )
+    @SecurityRequirements
     public ResponseEntity<Void> resetPassword(@RequestParam String token, @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(token, request.newPassword());
         return ResponseEntity.ok(null);
@@ -74,6 +106,8 @@ public class AuthController {
 
     // TODO: resposta html generico, usar frontend ou adaptar
     @GetMapping("/verify-email")
+    @Operation(summary = "Verificar email", description = "Confirma email do usuário através do token enviado por email")
+    @SecurityRequirements
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
 
         authService.verifyEmail(token);
