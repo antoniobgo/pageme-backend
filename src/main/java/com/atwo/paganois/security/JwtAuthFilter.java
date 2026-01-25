@@ -33,25 +33,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private CustomUserDetailsService userDetailsService;
 
     private static final List<String> PUBLIC_URLS = Arrays.asList(
-        "/auth/",
-        "/h2-console/",
-        "/v3/api-docs/",
-        "/api-docs/",
-        "/swagger-ui/",
-        "/swagger-ui.html",
-        "/swagger-resources/",
-        "/webjars/"
-    );
+            "/auth/",
+            "/h2-console/",
+            "/v3/api-docs/",
+            "/api-docs/",
+            "/swagger-ui/",
+            "/swagger-ui.html",
+            "/swagger-resources/",
+            "/webjars/");
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         boolean isPublic = PUBLIC_URLS.stream().anyMatch(path::startsWith);
-        
+
         if (isPublic) {
             logger.debug("Skipping JWT filter for public URL: {}", path);
         }
-        
+
         return isPublic;
     }
 

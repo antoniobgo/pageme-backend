@@ -53,7 +53,7 @@ public class OpenApiConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description("Insira o token JWT gerado no endpoint /auth/login")))
+                                        .description("Insira o access token gerado no endpoint /auth/login")))
 
                 // Aplica segurança globalmente (pode ser sobrescrito por endpoint)
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName));
