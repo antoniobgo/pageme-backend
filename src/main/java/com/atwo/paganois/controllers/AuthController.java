@@ -3,6 +3,7 @@ package com.atwo.paganois.controllers;
 import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.atwo.paganois.dtos.ForgotPasswordRequest;
 import com.atwo.paganois.dtos.LoginRequest;
 import com.atwo.paganois.dtos.LoginResponse;
+import com.atwo.paganois.dtos.MessageResponse;
 import com.atwo.paganois.dtos.RefreshRequest;
 import com.atwo.paganois.dtos.RegisterRequest;
 import com.atwo.paganois.dtos.RegisterResponse;
@@ -43,29 +45,37 @@ public class AuthController {
     @Operation(summary = "Fazer login", description = "Autentica usuário e retorna access token e refresh token JWT")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login realizado com sucesso", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Credenciais inválidas")
-    })
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
+            @ApiResponse(responseCode = "403", description = "Conta desabilitada ou não verificada") })
     @SecurityRequirements
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")
     @Operation(summary = "Renovar access token", description = "Gera novo access token usando refresh token válido")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token renovado com sucesso", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Refresh token inválido ou expirado")
+    })
     @SecurityRequirements
     public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshRequest request) {
-        return ResponseEntity.ok(authService.refresh(request));
+        LoginResponse response = authService.refresh(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Registrar novo usuário", description = "Cria uma nova conta de usuário e envia email de confirmação")
+    @Operation(summary = "Registrar novo usuário", description = "Cria uma nova conta de usuário e envia email de confirmação. "
+            +
+            "O usuário precisa verificar o email antes de fazer login.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso", content = @Content(schema = @Schema(implementation = RegisterResponse.class))),
+            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso. Email de verificação enviado.", content = @Content(schema = @Schema(implementation = RegisterResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Dados de registro inválidos"),
             @ApiResponse(responseCode = "409", description = "Username ou email já existe")
     })
     @SecurityRequirements
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
-
         RegisterResponse response = authService.register(request);
 
         URI location = ServletUriComponentsBuilder
@@ -73,40 +83,75 @@ public class AuthController {
                 .path("/api/users/{id}")
                 .buildAndExpand(response.id())
                 .toUri();
+
         return ResponseEntity.created(location).body(response);
     }
 
     @PostMapping("/forgot-password")
-    @Operation(
-        summary = "Solicitar reset de senha",
-        description = "Envia email com link para redefinir senha"
-    )
+    @Operation(summary = "Solicitar reset de senha", description = "Envia email com link para redefinir senha. "
+            + "Por segurança, sempre retorna sucesso mesmo se o email em formáto válido não existir.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "202", description = "Solicitação aceita. Se o email existir, um link será enviado."),
+            @ApiResponse(responseCode = "400", description = "Email com formato inválido ou não fornecido") })
     @SecurityRequirements
-    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<MessageResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+
         authService.sendPasswordResetEmail(request.email());
-        return ResponseEntity.ok(null);
+
+        MessageResponse response = new MessageResponse(
+                "Se o email existir em nosso sistema, você receberá instruções para redefinir sua senha.");
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
     @PostMapping("/resend-verification")
-    public ResponseEntity<Void> resendVerification(@RequestBody ResendEmailVerificationRequest request) {
+    @Operation(summary = "Reenviar email de verificação", description = "Reenvia o email de confirmação de conta. "
+            + "Por segurança, sempre retorna sucesso.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "202", description = "Solicitação aceita. Se o email existir e não estiver verificado, um novo link será enviado."),
+            @ApiResponse(responseCode = "400", description = "Email com formato inválido ou não fornecido") })
+    @SecurityRequirements
+    public ResponseEntity<MessageResponse> resendVerification(
+            @Valid @RequestBody ResendEmailVerificationRequest request) {
+
         authService.resendEmailVerification(request.email());
-        return ResponseEntity.ok(null);
+
+        MessageResponse response = new MessageResponse(
+                "Se o email existir e não estiver verificado, você receberá um novo link de verificação.");
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
     @PostMapping("/reset-password")
-    @Operation(
-        summary = "Resetar senha",
-        description = "Define nova senha usando token de reset"
-    )
+    @Operation(summary = "Resetar senha", description = "Define nova senha usando token de reset recebido por email")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Senha redefinida com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Senha não atende aos requisitos mínimos"),
+            @ApiResponse(responseCode = "404", description = "Token não encontrado"),
+            @ApiResponse(responseCode = "410", description = "Token expirado")
+    })
     @SecurityRequirements
-    public ResponseEntity<Void> resetPassword(@RequestParam String token, @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<Void> resetPassword(
+            @RequestParam String token,
+            @Valid @RequestBody ResetPasswordRequest request) {
+
         authService.resetPassword(token, request.newPassword());
-        return ResponseEntity.ok(null);
+
+        return ResponseEntity.noContent().build();
     }
 
     // TODO: resposta html generico, usar frontend ou adaptar
     @GetMapping("/verify-email")
-    @Operation(summary = "Verificar email", description = "Confirma email do usuário através do token enviado por email")
+    @Operation(summary = "Verificar email", description = "Confirma email do usuário através do token enviado por email. "
+            +
+            "Retorna página HTML para melhor experiência do usuário.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Email verificado com sucesso. Retorna página HTML de confirmação."),
+            @ApiResponse(responseCode = "400", description = "Token inválido ou expirado"),
+            @ApiResponse(responseCode = "404", description = "Token não encontrado"),
+            @ApiResponse(responseCode = "410", description = "Token expirado")
+    })
     @SecurityRequirements
     public ResponseEntity<String> verifyEmail(@RequestParam String token) {
 
@@ -175,7 +220,8 @@ public class AuthController {
                 </html>
                 """;
 
-        return ResponseEntity.ok().contentType(org.springframework.http.MediaType.TEXT_HTML).body(html);
+        return ResponseEntity.ok().contentType(org.springframework.http.MediaType.TEXT_HTML)
+                .body(html);
     }
 
 }

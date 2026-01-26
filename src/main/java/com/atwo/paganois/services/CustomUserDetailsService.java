@@ -1,12 +1,10 @@
 package com.atwo.paganois.services;
 
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
 import com.atwo.paganois.entities.User;
 import com.atwo.paganois.exceptions.UserNotFoundException;
 import com.atwo.paganois.repositories.UserRepository;
@@ -25,7 +23,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found: " + email));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + email));
+    }
+
+    public Optional<User> findByEmailOptional(String email) {
+        return userRepository.findByEmail(email);
     }
 
     public boolean existsByUsername(String username) {
@@ -36,5 +39,5 @@ public class CustomUserDetailsService implements UserDetailsService {
         return userRepository.existsByEmail(email);
     }
 
-    
+
 }

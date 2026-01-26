@@ -1,9 +1,8 @@
 package com.atwo.paganois.controllers.handlers;
 
-import com.atwo.paganois.dtos.CustomErrorResponse;
-import com.atwo.paganois.exceptions.UserAlreadyExistsException;
-
-import jakarta.servlet.http.HttpServletRequest;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +14,15 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import com.atwo.paganois.dtos.CustomErrorResponse;
+import com.atwo.paganois.exceptions.ExpiredTokenException;
+import com.atwo.paganois.exceptions.InvalidTokenException;
+import com.atwo.paganois.exceptions.InvalidTokenTypeException;
+import com.atwo.paganois.exceptions.TokenNotFoundException;
+import com.atwo.paganois.exceptions.UserAlreadyExistsException;
+import com.atwo.paganois.exceptions.UserNotVerifiedOrNotEnabledException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -25,17 +30,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<CustomErrorResponse> handleBadCredentials(BadCredentialsException e,
             HttpServletRequest request) {
-        HttpStatus status = HttpStatus.FORBIDDEN;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(), e.getMessage(),
-                request.getRequestURI());
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
     }
 
     @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<CustomErrorResponse> handleDisabled(DisabledException e, HttpServletRequest request) {
+    public ResponseEntity<CustomErrorResponse> handleDisabled(DisabledException e,
+            HttpServletRequest request) {
         HttpStatus status = HttpStatus.FORBIDDEN;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(), e.getMessage(),
-                request.getRequestURI());
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
     }
 
@@ -43,8 +49,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CustomErrorResponse> handleUserNotFound(UsernameNotFoundException e,
             HttpServletRequest request) {
         HttpStatus status = HttpStatus.NOT_FOUND;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(), e.getMessage(),
-                request.getRequestURI());
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
     }
 
@@ -64,8 +70,53 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CustomErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException e,
             HttpServletRequest request) {
         HttpStatus status = HttpStatus.CONFLICT;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(), e.getMessage(),
-                request.getRequestURI());
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(UserNotVerifiedOrNotEnabledException.class)
+    public ResponseEntity<CustomErrorResponse> handleUserNotVerifiedOrNotEnabledException(
+            UserNotVerifiedOrNotEnabledException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<CustomErrorResponse> handleInvalidTokenException(
+            InvalidTokenException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(TokenNotFoundException.class)
+    public ResponseEntity<CustomErrorResponse> handleTokenNotFoundException(
+            TokenNotFoundException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(InvalidTokenTypeException.class)
+    public ResponseEntity<CustomErrorResponse> handleInvalidTokenTypeException(
+            InvalidTokenTypeException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(ExpiredTokenException.class)
+    public ResponseEntity<CustomErrorResponse> handleExpiredTokenException(
+            ExpiredTokenException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.GONE;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
     }
 

@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.atwo.paganois.dtos.LoginRequest;
 import com.atwo.paganois.dtos.LoginResponse;
@@ -16,7 +17,9 @@ import com.atwo.paganois.dtos.RegisterResponse;
 import com.atwo.paganois.entities.TokenType;
 import com.atwo.paganois.entities.User;
 import com.atwo.paganois.entities.VerificationToken;
+import com.atwo.paganois.exceptions.InvalidTokenException;
 import com.atwo.paganois.exceptions.UserAlreadyExistsException;
+import com.atwo.paganois.exceptions.UserNotVerifiedOrNotEnabledException;
 import com.atwo.paganois.security.JwtUtil;
 
 @Service
@@ -41,12 +44,12 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.username(),
-                        loginRequest.password()));
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                loginRequest.username(), loginRequest.password()));
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User userDetails = (User) authentication.getPrincipal();
+        if (!userDetails.isEmailVerified() || !userDetails.isEnabled())
+            throw new UserNotVerifiedOrNotEnabledException("Conta desabilitada ou não verificada");
 
         String accessToken = jwtUtil.generateToken(userDetails);
         String refreshToken = jwtUtil.generateRefreshToken(userDetails);
@@ -57,8 +60,9 @@ public class AuthService {
     public LoginResponse refresh(RefreshRequest request) {
         String refreshToken = request.refreshToken();
 
-        // validate and --todo:-- throw exception
-        jwtUtil.validateToken(refreshToken);
+        if (!jwtUtil.validateToken(refreshToken))
+            throw new InvalidTokenException("Token inválido ou expirado");
+
         String username = jwtUtil.extractUsername(refreshToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         String newAccessToken = jwtUtil.generateToken(userDetails);
@@ -72,21 +76,20 @@ public class AuthService {
             throw new UserAlreadyExistsException("Username ou email já está em uso");
 
         User savedUser = userService.registerUser(registerRequest.getUsername(),
-                passwordEncoder.encode(registerRequest.getPassword()),
-                registerRequest.getEmail());
+                passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getEmail());
 
         verificationService.sendEmailVerification(savedUser);
 
-        return new RegisterResponse(savedUser.getId(), savedUser.getUsername(), savedUser.isEmailVerified());
+        return new RegisterResponse(savedUser.getId(), savedUser.getUsername(),
+                savedUser.isEmailVerified());
     }
 
     public void resendEmailVerification(String email) {
         if (!userDetailsService.existsByEmail(email))
-            throw new RuntimeException("Email não encontrado");
-
+            return;
         User user = userDetailsService.findByEmail(email);
         if (user.isEmailVerified())
-            throw new RuntimeException("Usuário com email já verificado");
+            return;
 
         verificationService.sendEmailVerification(user);
 
@@ -102,6 +105,7 @@ public class AuthService {
         verificationService.deleteToken(verificationToken);
     }
 
+    @Transactional
     public void sendPasswordResetEmail(String email) {
         verificationService.sendPasswordReset(email);
     }
