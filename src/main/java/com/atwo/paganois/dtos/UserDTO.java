@@ -1,23 +1,24 @@
 package com.atwo.paganois.dtos;
 
 import org.springframework.security.core.userdetails.UserDetails;
-
 import com.atwo.paganois.entities.User;
 
 public class UserDTO {
 
     private Long id;
     private String username;
+    private String email;
     private RoleDTO role;
     private boolean enabled = true;
     private boolean emailVerified;
 
-    public UserDTO() {
-    }
+    public UserDTO() {}
 
-    public UserDTO(Long id, String username, RoleDTO role, boolean enabled, boolean emailVerified) {
+    public UserDTO(Long id, String username, String email, RoleDTO role, boolean enabled,
+            boolean emailVerified) {
         this.id = id;
         this.username = username;
+        this.email = email;
         this.role = role;
         this.enabled = enabled;
         this.emailVerified = emailVerified;
@@ -28,6 +29,7 @@ public class UserDTO {
         username = entity.getUsername();
         role = new RoleDTO(entity.getRole().getId(), entity.getRole().getAuthority());
         enabled = entity.isEnabled();
+        email = entity.getEmail();
         emailVerified = entity.isEmailVerified();
     }
 
@@ -49,6 +51,15 @@ public class UserDTO {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public RoleDTO getRole() {
@@ -73,8 +84,8 @@ public class UserDTO {
 
     @Override
     public String toString() {
-        return "User [id=" + id + ", username=" + username + ", role=" + role.getAuthority() + ", enabled="
-                + enabled + "]";
+        return "User [id=" + id + ", username=" + username + ", role=" + role.getAuthority()
+                + ", enabled=" + enabled + "]";
     }
 
     @Override
@@ -101,5 +112,6 @@ public class UserDTO {
             return false;
         return true;
     }
+
 
 }

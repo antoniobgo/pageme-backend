@@ -1,14 +1,14 @@
 package com.atwo.paganois.services;
 
-import com.atwo.paganois.dtos.*;
-import com.atwo.paganois.entities.Role;
-import com.atwo.paganois.entities.TokenType;
-import com.atwo.paganois.entities.User;
-import com.atwo.paganois.entities.VerificationToken;
-import com.atwo.paganois.exceptions.UserAlreadyExistsException;
-import com.atwo.paganois.repositories.RoleRepository;
-import com.atwo.paganois.repositories.UserRepository;
-import com.atwo.paganois.security.JwtUtil;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,24 +24,23 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.LocalDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import com.atwo.paganois.dtos.LoginRequest;
+import com.atwo.paganois.dtos.LoginResponse;
+import com.atwo.paganois.dtos.RefreshRequest;
+import com.atwo.paganois.dtos.RegisterRequest;
+import com.atwo.paganois.dtos.RegisterResponse;
+import com.atwo.paganois.entities.Role;
+import com.atwo.paganois.entities.TokenType;
+import com.atwo.paganois.entities.User;
+import com.atwo.paganois.entities.VerificationToken;
+import com.atwo.paganois.exceptions.UserAlreadyExistsException;
+import com.atwo.paganois.security.JwtUtil;
 
 /**
  * Unit tests for AuthService
  * 
- * Tests cover:
- * 1. Login flow (authentication + JWT generation)
- * 2. Token refresh flow
- * 3. User registration flow
- * 4. Email verification
- * 5. Password reset request
- * 6. Password reset execution
+ * Tests cover: 1. Login flow (authentication + JWT generation) 2. Token refresh flow 3. User
+ * registration flow 4. Email verification 5. Password reset request 6. Password reset execution
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService - Unit Tests")
@@ -135,8 +134,8 @@ class AuthServiceTest {
             authService.login(loginRequest);
 
             // Assert
-            ArgumentCaptor<UsernamePasswordAuthenticationToken> authCaptor = ArgumentCaptor
-                    .forClass(UsernamePasswordAuthenticationToken.class);
+            ArgumentCaptor<UsernamePasswordAuthenticationToken> authCaptor =
+                    ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
             verify(authenticationManager).authenticate(authCaptor.capture());
 
             UsernamePasswordAuthenticationToken authToken = authCaptor.getValue();
@@ -415,14 +414,15 @@ class AuthServiceTest {
             verificationToken.setUser(validUser);
             verificationToken.setType(TokenType.EMAIL_VERIFICATION);
             verificationToken.setExpiryDate(LocalDateTime.now().plusHours(1));
-            when(verificationService.validateToken(EMAIL_VERIFICATION_TOKEN, TokenType.EMAIL_VERIFICATION))
-                    .thenReturn(verificationToken);
+            when(verificationService.validateToken(EMAIL_VERIFICATION_TOKEN,
+                    TokenType.EMAIL_VERIFICATION)).thenReturn(verificationToken);
 
             // Act
             authService.verifyEmail(EMAIL_VERIFICATION_TOKEN);
 
             // Assert
-            verify(verificationService, times(1)).validateToken(EMAIL_VERIFICATION_TOKEN, TokenType.EMAIL_VERIFICATION);
+            verify(verificationService, times(1)).validateToken(EMAIL_VERIFICATION_TOKEN,
+                    TokenType.EMAIL_VERIFICATION);
         }
 
         @Test
@@ -435,8 +435,8 @@ class AuthServiceTest {
             verificationToken.setUser(validUser);
             verificationToken.setType(TokenType.EMAIL_VERIFICATION);
             verificationToken.setExpiryDate(LocalDateTime.now().plusHours(1));
-            when(verificationService.validateToken(EMAIL_VERIFICATION_TOKEN, TokenType.EMAIL_VERIFICATION))
-                    .thenReturn(verificationToken);
+            when(verificationService.validateToken(EMAIL_VERIFICATION_TOKEN,
+                    TokenType.EMAIL_VERIFICATION)).thenReturn(verificationToken);
 
             // Act
             authService.verifyEmail(EMAIL_VERIFICATION_TOKEN);
@@ -513,7 +513,8 @@ class AuthServiceTest {
             authService.resetPassword(RESET_TOKEN, NEW_PASSWORD);
 
             // Assert
-            verify(verificationService, times(1)).validateToken(RESET_TOKEN, TokenType.PASSWORD_RESET);
+            verify(verificationService, times(1)).validateToken(RESET_TOKEN,
+                    TokenType.PASSWORD_RESET);
         }
 
         @Test
