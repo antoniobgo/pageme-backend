@@ -1,5 +1,6 @@
 package com.atwo.paganois.dtos;
 
+import com.atwo.paganois.validators.StrongPassword;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -21,10 +22,11 @@ public class RegisterRequest {
     @Email
     private String email;
 
-    @Schema(description = "Senha do usuário", example = "strong@paSSworD!", minLength = 6,
-            maxLength = 50, format = "password")
+    @Schema(description = "Senha do usuário", example = "strong@paSSworD!", minLength = 8,
+            maxLength = 40, format = "password")
     @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 6, max = 50, message = "Senha deve ter entre 6 e 50 caracteres")
+    @Size(min = 6, max = 50, message = "Senha deve ter entre 8 e 50 caracteres")
+    @StrongPassword
     private String password;
 
     public RegisterRequest() {}
