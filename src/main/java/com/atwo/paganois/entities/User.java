@@ -1,11 +1,10 @@
 package com.atwo.paganois.entities;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,9 +36,14 @@ public class User implements UserDetails {
     private Role role;
 
     private boolean enabled = true;
+
     private boolean emailVerified = false;
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
     public User() {
+        this.createdAt = LocalDateTime.now();
     }
 
     public User(Long id, String username, String password, Role role) {
@@ -47,6 +51,7 @@ public class User implements UserDetails {
         this.username = username;
         this.password = password;
         this.role = role;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -116,8 +121,8 @@ public class User implements UserDetails {
 
     @Override
     public String toString() {
-        return "User [id=" + id + ", username=" + username + ", password=" + password + ", role=" + role + ", enabled="
-                + enabled + "]";
+        return "User [id=" + id + ", username=" + username + ", password=" + password + ", role="
+                + role + ", enabled=" + enabled + ", createdAt=" + createdAt + "]";
     }
 
     @Override
@@ -143,6 +148,10 @@ public class User implements UserDetails {
         } else if (!id.equals(other.id))
             return false;
         return true;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
 }

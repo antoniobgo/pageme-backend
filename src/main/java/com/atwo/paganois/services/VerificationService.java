@@ -3,11 +3,9 @@ package com.atwo.paganois.services;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import com.atwo.paganois.entities.TokenType;
 import com.atwo.paganois.entities.User;
 import com.atwo.paganois.entities.VerificationToken;
@@ -15,7 +13,6 @@ import com.atwo.paganois.exceptions.ExpiredTokenException;
 import com.atwo.paganois.exceptions.InvalidTokenTypeException;
 import com.atwo.paganois.exceptions.TokenNotFoundException;
 import com.atwo.paganois.repositories.VerificationTokenRepository;
-
 import jakarta.transaction.Transactional;
 
 @Service
@@ -63,13 +60,10 @@ public class VerificationService {
     @Transactional
     public void sendEmailVerification(User user) {
 
-        // Remover tokens antigos
         tokenRepository.deleteByUserIdAndType(user.getId(), TokenType.EMAIL_VERIFICATION);
 
-        // Gera token único
         String token = UUID.randomUUID().toString();
 
-        // Salva token no banco
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(token);
         verificationToken.setUser(user);
@@ -77,10 +71,8 @@ public class VerificationService {
         verificationToken.setExpiryDate(LocalDateTime.now().plusHours(24));
         tokenRepository.save(verificationToken);
 
-        // Monta URL de confirmação
         String confirmationUrl = baseUrl + "/auth/verify-email?token=" + token;
 
-        // Envia email
         emailService.sendSimpleEmail(user.getEmail(), "Confirme seu email - Paganois",
                 "Por favor, confirme seu email clicando no link: \n" + confirmationUrl);
     }

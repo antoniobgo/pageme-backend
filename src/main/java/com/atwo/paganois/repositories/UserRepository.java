@@ -1,10 +1,12 @@
 package com.atwo.paganois.repositories;
 
-import com.atwo.paganois.entities.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
+import java.time.LocalDateTime;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import com.atwo.paganois.entities.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -15,4 +17,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.email = :email AND u.emailVerified = true")
+    boolean existsByEmailAndVerified(@Param("email") String email);
+
+    @Query("DELETE FROM User u WHERE u.email = :email AND u.emailVerified = false")
+    void deleteUnverifiedByEmail(String email);
+
+    @Query("DELETE FROM User u WHERE u.emailVerified = false AND u.createdAt < :expiryDate")
+    int deleteExpiredUnverifiedUsers(LocalDateTime expiryDate);
 }
