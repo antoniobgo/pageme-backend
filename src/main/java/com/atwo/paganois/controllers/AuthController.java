@@ -29,6 +29,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @RestController
 @RequestMapping("/auth")
@@ -46,6 +48,8 @@ public class AuthController {
                     @ApiResponse(responseCode = "200", description = "Login realizado com sucesso",
                             content = @Content(
                                     schema = @Schema(implementation = LoginResponse.class))),
+                    @ApiResponse(responseCode = "400",
+                            description = "Dados de login inválidos (validação)"),
                     @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
                     @ApiResponse(responseCode = "403",
                             description = "Conta desabilitada ou não verificada")})
@@ -63,6 +67,9 @@ public class AuthController {
                     @ApiResponse(responseCode = "200", description = "Token renovado com sucesso",
                             content = @Content(
                                     schema = @Schema(implementation = LoginResponse.class))),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Formato do refresh token inválido"),
                     @ApiResponse(responseCode = "401",
                             description = "Refresh token inválido ou expirado")})
     @SecurityRequirements
@@ -96,7 +103,7 @@ public class AuthController {
             description = "Envia email com link para redefinir senha. "
                     + "Por segurança, sempre retorna sucesso mesmo se o email em formáto válido não existir.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "202",
+            @ApiResponse(responseCode = "200",
                     description = "Solicitação aceita. Se o email existir, um link será enviado."),
             @ApiResponse(responseCode = "400",
                     description = "Email com formato inválido ou não fornecido")})
@@ -109,7 +116,7 @@ public class AuthController {
         MessageResponse response = new MessageResponse(
                 "Se o email existir em nosso sistema, você receberá instruções para redefinir sua senha.");
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping("/resend-verification")
@@ -138,98 +145,37 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Senha redefinida com sucesso"),
             @ApiResponse(responseCode = "400",
-                    description = "Senha não atende aos requisitos mínimos"),
+                    description = "Senha não atende aos requisitos mínimos ou tipo de token inválido"),
             @ApiResponse(responseCode = "404", description = "Token não encontrado"),
             @ApiResponse(responseCode = "410", description = "Token expirado")})
     @SecurityRequirements
-    public ResponseEntity<Void> resetPassword(@RequestParam String token,
-            @Valid @RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
 
-        authService.resetPassword(token, request.newPassword());
+        authService.resetPassword(request.token(), request.newPassword());
 
         return ResponseEntity.noContent().build();
     }
 
-    // TODO: resposta de sucesso com html generico, usar frontend ou adaptar
     @GetMapping("/verify-email")
     @Operation(summary = "Verificar email",
             description = "Confirma email do usuário através do token enviado por email. "
                     + "Retorna página HTML para melhor experiência do usuário.")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200",
-            description = "Email verificado com sucesso. Retorna página HTML de confirmação."),
-            @ApiResponse(responseCode = "400", description = "Token inválido ou expirado"),
-            @ApiResponse(responseCode = "404", description = "Token não encontrado"),
-            @ApiResponse(responseCode = "410", description = "Token expirado")})
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Email verificado com sucesso",
+                            content = @Content(
+                                    schema = @Schema(implementation = MessageResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "Tipo de token inválido"),
+                    @ApiResponse(responseCode = "404", description = "Token não encontrado"),
+                    @ApiResponse(responseCode = "410", description = "Token expirado")})
     @SecurityRequirements
-    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+    public ResponseEntity<MessageResponse> verifyEmail(@RequestParam @NotBlank @Size(min = 36,
+            max = 36, message = "Token deve ter 36 caracteres") String token) {
 
         authService.verifyEmail(token);
 
-        String html = """
-                <!DOCTYPE html>
-                <html lang="pt-BR">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Email Verificado</title>
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            min-height: 100vh;
-                            margin: 0;
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        }
-                        .card {
-                            background: white;
-                            padding: 40px;
-                            border-radius: 10px;
-                            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-                            text-align: center;
-                            max-width: 400px;
-                        }
-                        .success-icon {
-                            font-size: 64px;
-                            color: #4CAF50;
-                            margin-bottom: 20px;
-                        }
-                        h1 {
-                            color: #333;
-                            margin-bottom: 10px;
-                        }
-                        p {
-                            color: #666;
-                            margin-bottom: 30px;
-                        }
-                        .button {
-                            display: inline-block;
-                            padding: 12px 30px;
-                            background: #667eea;
-                            color: white;
-                            text-decoration: none;
-                            border-radius: 5px;
-                            transition: background 0.3s;
-                        }
-                        .button:hover {
-                            background: #5568d3;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="card">
-                        <div class="success-icon">✅</div>
-                        <h1>Email Verificado!</h1>
-                        <p>Sua conta foi ativada com sucesso. Você já pode fazer login.</p>
-                        <a href="/login" class="button">Ir para Login</a>
-                    </div>
-                </body>
-                </html>
-                """;
-
-        return ResponseEntity.ok().contentType(org.springframework.http.MediaType.TEXT_HTML)
-                .body(html);
+        authService.verifyEmail(token);
+        return ResponseEntity.ok(new MessageResponse("Email verificado com sucesso!"));
     }
 
 }
