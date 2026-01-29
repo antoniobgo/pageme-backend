@@ -42,6 +42,7 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
         Authentication authentication =
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
@@ -57,6 +58,7 @@ public class AuthService {
         return new LoginResponse(accessToken, refreshToken);
     }
 
+    @Transactional
     public LoginResponse refresh(RefreshRequest request) {
         String refreshToken = request.refreshToken();
 
@@ -70,6 +72,7 @@ public class AuthService {
         return new LoginResponse(newAccessToken, refreshToken);
     }
 
+    @Transactional
     public RegisterResponse register(RegisterRequest registerRequest) {
         if (userDetailsService.existsByUsername(registerRequest.getUsername())
                 || userDetailsService.existsByEmailAndVerified(registerRequest.getEmail()))
@@ -86,6 +89,7 @@ public class AuthService {
                 savedUser.isEmailVerified());
     }
 
+    @Transactional
     public void resendEmailVerification(String email) {
         if (!userDetailsService.existsByEmail(email))
             return;
@@ -97,6 +101,7 @@ public class AuthService {
 
     }
 
+    @Transactional
     public void verifyEmail(String token) {
         VerificationToken verificationToken =
                 verificationService.validateToken(token, TokenType.EMAIL_VERIFICATION);
@@ -105,7 +110,7 @@ public class AuthService {
         user.setEmailVerified(true);
         userService.save(user);
 
-        verificationService.deleteToken(verificationToken);
+        verificationService.deleteByUserIdAndType(user.getId(), verificationToken.getType());
     }
 
     @Transactional
@@ -114,11 +119,13 @@ public class AuthService {
     }
 
     public void resetPassword(String token, String newPassword) {
-        VerificationToken tokenEntity =
+        VerificationToken verificationToken =
                 verificationService.validateToken(token, TokenType.PASSWORD_RESET);
 
-        User user = tokenEntity.getUser();
+        User user = verificationToken.getUser();
 
         userService.setNewPassword(user, newPassword);
+
+        verificationService.deleteByUserIdAndType(user.getId(), verificationToken.getType());
     }
 }
