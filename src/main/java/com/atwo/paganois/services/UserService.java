@@ -31,6 +31,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public User save(User user) {
         return userRepository.save(user);
     }
@@ -44,6 +45,7 @@ public class UserService {
         return new UserDTO(user);
     }
 
+    @Transactional
     public User registerUser(String username, String encodedPassword, String email) {
         User newUser = new User();
         newUser.setUsername(username);
@@ -55,6 +57,7 @@ public class UserService {
         return savedUser;
     }
 
+    @Transactional
     public void setNewPassword(User user, String newPassword) {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);

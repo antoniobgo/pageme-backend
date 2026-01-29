@@ -95,4 +95,8 @@ public class VerificationService {
         tokenRepository.delete(verificationToken);
     }
 
+    public void deleteByUserIdAndType(Long id, TokenType type) {
+        tokenRepository.deleteByUserIdAndType(id, type);
+    }
+
 }
