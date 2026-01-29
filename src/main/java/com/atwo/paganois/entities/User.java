@@ -122,7 +122,7 @@ public class User implements UserDetails {
     @Override
     public String toString() {
         return "User [id=" + id + ", username=" + username + ", password=" + password + ", role="
-                + role + ", enabled=" + enabled + "]";
+                + role + ", enabled=" + enabled + ", createdAt=" + createdAt + "]";
     }
 
     @Override
@@ -148,6 +148,10 @@ public class User implements UserDetails {
         } else if (!id.equals(other.id))
             return false;
         return true;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
 }
