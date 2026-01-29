@@ -25,7 +25,7 @@ public class RegisterRequest {
     @Schema(description = "Senha do usuário", example = "strong@paSSworD!", minLength = 8,
             maxLength = 40, format = "password")
     @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 6, max = 50, message = "Senha deve ter entre 8 e 50 caracteres")
+    @Size(min = 6, max = 40, message = "Senha deve ter entre 8 e 40 caracteres")
     @StrongPassword
     private String password;
 

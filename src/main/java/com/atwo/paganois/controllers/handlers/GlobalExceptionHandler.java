@@ -3,7 +3,6 @@ package com.atwo.paganois.controllers.handlers;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,7 +12,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import com.atwo.paganois.dtos.CustomErrorResponse;
 import com.atwo.paganois.exceptions.ExpiredTokenException;
 import com.atwo.paganois.exceptions.InvalidTokenException;
@@ -21,7 +19,7 @@ import com.atwo.paganois.exceptions.InvalidTokenTypeException;
 import com.atwo.paganois.exceptions.TokenNotFoundException;
 import com.atwo.paganois.exceptions.UserAlreadyExistsException;
 import com.atwo.paganois.exceptions.UserNotVerifiedOrNotEnabledException;
-
+import com.atwo.paganois.exceptions.WrongPasswordException;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
@@ -85,8 +83,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<CustomErrorResponse> handleInvalidTokenException(
-            InvalidTokenException e, HttpServletRequest request) {
+    public ResponseEntity<CustomErrorResponse> handleInvalidTokenException(InvalidTokenException e,
+            HttpServletRequest request) {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
                 e.getMessage(), request.getRequestURI());
@@ -112,9 +110,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ExpiredTokenException.class)
-    public ResponseEntity<CustomErrorResponse> handleExpiredTokenException(
-            ExpiredTokenException e, HttpServletRequest request) {
+    public ResponseEntity<CustomErrorResponse> handleExpiredTokenException(ExpiredTokenException e,
+            HttpServletRequest request) {
         HttpStatus status = HttpStatus.GONE;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    public ResponseEntity<CustomErrorResponse> handleWrongPasswordException(
+            WrongPasswordException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
         CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
                 e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
