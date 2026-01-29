@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record LoginRequest(
-        @Schema(description = "Username", example = "userdasilva", maxLength = 50) @NotBlank(
+        @Schema(description = "Username", example = "user", maxLength = 50) @NotBlank(
                 message = "Username é obrigatório") @Size(max = 50,
                         message = "Username deve ter no máximo 50 caracteres") String username,
 

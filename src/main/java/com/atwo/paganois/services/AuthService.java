@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.atwo.paganois.dtos.LoginRequest;
 import com.atwo.paganois.dtos.LoginResponse;
 import com.atwo.paganois.dtos.RefreshRequest;
@@ -44,8 +43,9 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginRequest.username(), loginRequest.password()));
+        Authentication authentication =
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                        loginRequest.username(), loginRequest.password()));
 
         User userDetails = (User) authentication.getPrincipal();
         if (!userDetails.isEmailVerified() || !userDetails.isEnabled())
@@ -96,7 +96,8 @@ public class AuthService {
     }
 
     public void verifyEmail(String token) {
-        VerificationToken verificationToken = verificationService.validateToken(token, TokenType.EMAIL_VERIFICATION);
+        VerificationToken verificationToken =
+                verificationService.validateToken(token, TokenType.EMAIL_VERIFICATION);
 
         User user = verificationToken.getUser();
         user.setEmailVerified(true);
@@ -111,10 +112,11 @@ public class AuthService {
     }
 
     public void resetPassword(String token, String newPassword) {
-        VerificationToken tokenEntity = verificationService.validateToken(token, TokenType.PASSWORD_RESET);
+        VerificationToken tokenEntity =
+                verificationService.validateToken(token, TokenType.PASSWORD_RESET);
 
         User user = tokenEntity.getUser();
 
-        userService.setNewPassword(user, passwordEncoder.encode(newPassword));
+        userService.setNewPassword(user, newPassword);
     }
 }
