@@ -15,10 +15,9 @@ public class ScheduledTasks {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
-    // ✅ Roda todo dia às 3h da manhã
     @Scheduled(cron = "0 0 3 * * *")
     public void cleanupExpiredUnverifiedUsers() {
-        int daysToExpire = 7; // Usuários não verificados há mais de 7 dias
+        int daysToExpire = 7;
 
         logger.info("Iniciando limpeza de usuários não verificados (>{} dias)", daysToExpire);
 
