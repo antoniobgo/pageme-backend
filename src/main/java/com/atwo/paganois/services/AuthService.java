@@ -72,8 +72,10 @@ public class AuthService {
 
     public RegisterResponse register(RegisterRequest registerRequest) {
         if (userDetailsService.existsByUsername(registerRequest.getUsername())
-                || userDetailsService.existsByEmail(registerRequest.getEmail()))
+                || userDetailsService.existsByEmailAndVerified(registerRequest.getEmail()))
             throw new UserAlreadyExistsException("Username ou email já está em uso");
+
+        userDetailsService.deleteUnverifiedByEmail(registerRequest.getEmail());
 
         User savedUser = userService.registerUser(registerRequest.getUsername(),
                 passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getEmail());
