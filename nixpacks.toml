@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["...", "jdk21"]
+
+[phases.build]
+cmds = ["mvn clean install -DskipTests"]
+
+[phases.start]
+cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=prod -jar target/paganois-0.0.1-SNAPSHOT.jar"
