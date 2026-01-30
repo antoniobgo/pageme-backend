@@ -1,13 +1,16 @@
 package com.atwo.paganois.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.atwo.paganois.dtos.UserDTO;
+import com.atwo.paganois.entities.TokenType;
 import com.atwo.paganois.entities.User;
+import com.atwo.paganois.entities.VerificationToken;
 import com.atwo.paganois.exceptions.AccountDisabledException;
+import com.atwo.paganois.exceptions.EmailAlreadyTakenException;
+import com.atwo.paganois.exceptions.LoggedUserAndChangeEmailTokenMismatchException;
 import com.atwo.paganois.exceptions.UserNotFoundException;
 import com.atwo.paganois.exceptions.WrongPasswordException;
 import com.atwo.paganois.repositories.RoleRepository;
@@ -25,7 +28,7 @@ public class UserService {
     private RoleRepository roleRepository;
 
     @Autowired
-    private AuthenticationManager authenticationManager;
+    private VerificationService verificationService;
 
     UserService(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
@@ -74,6 +77,49 @@ public class UserService {
         user.setPassword(encodedNewPassword);
         userRepository.save(user);
     }
+
+    public void requestEmailChange(User user, String newEmail) {
+        validateNewEmail(user, newEmail);
+
+        verificationService.sendEmailChangeVerification(user, newEmail);
+    }
+
+    public String confirmEmailChange(User user, String token) {
+        VerificationToken verificationToken =
+                verificationService.validateToken(token, TokenType.EMAIL_CHANGE);
+
+        if (!verificationToken.getUser().getId().equals(user.getId()))
+            throw new LoggedUserAndChangeEmailTokenMismatchException(
+                    "Token de troca de email não pertence ao usuário autenticado");
+
+        String newEmail = verificationToken.getPendingEmail();
+
+        validateNewEmail(user, newEmail);
+
+        updateEmail(user, newEmail);
+
+        verificationService.deleteByUserIdAndType(user.getId(), TokenType.EMAIL_CHANGE);
+
+        return newEmail;
+    }
+
+    public void validateNewEmail(User user, String newEmail) {
+        if (user.getEmail().equalsIgnoreCase(newEmail)) {
+            throw new EmailAlreadyTakenException("Este já é seu email atual");
+        }
+
+        if (userRepository.existsByEmailAndVerified(newEmail)) {
+            throw new EmailAlreadyTakenException("Email já está em uso");
+        }
+    }
+
+    @Transactional
+    public void updateEmail(User user, String newEmail) {
+        user.setEmail(newEmail);
+        userRepository.save(user);
+    }
+
+
 
     // TODO: adicionar exception no handler
     // TODO: terminar fluxo de update email

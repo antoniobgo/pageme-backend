@@ -2,7 +2,6 @@ package com.atwo.paganois.entities;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,34 +12,43 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="verfication_token")
+@Table(name = "verfication_token")
 public class VerificationToken {
-    
+
     @Id
     @Column(length = 36)
     private String token;
-    
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    
+
     @Column(nullable = false)
     private LocalDateTime expiryDate;
-    
+
+    @Column(length = 100)
+    private String pendingEmail;
+
     @Enumerated(EnumType.STRING)
     private TokenType type;
-    
+
     public VerificationToken() {
         token = UUID.randomUUID().toString();
     }
-    
+
+
     public VerificationToken(User user, TokenType type, int expiryHours) {
         this();
         this.user = user;
         this.type = type;
         this.expiryDate = LocalDateTime.now().plusHours(expiryHours);
     }
-    
+
+    public VerificationToken(User user, TokenType type, int expiryHours, String pendingEmail) {
+        this(user, type, expiryHours);
+        this.pendingEmail = pendingEmail;
+    }
+
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiryDate);
     }
@@ -101,6 +109,16 @@ public class VerificationToken {
             return false;
         return true;
     }
-    
-    
+
+
+    public String getPendingEmail() {
+        return pendingEmail;
+    }
+
+
+    public void setPendingEmail(String pendingEmail) {
+        this.pendingEmail = pendingEmail;
+    }
+
+
 }

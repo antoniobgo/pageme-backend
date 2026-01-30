@@ -91,6 +91,31 @@ public class VerificationService {
         return tokenEntity;
     }
 
+    @Transactional
+    public void sendEmailChangeVerification(User user, String newEmail) {
+        tokenRepository.deleteByUserIdAndType(user.getId(), TokenType.EMAIL_CHANGE);
+
+        String token = UUID.randomUUID().toString();
+
+        VerificationToken changeToken = new VerificationToken();
+        changeToken.setToken(token);
+        changeToken.setUser(user);
+        changeToken.setType(TokenType.EMAIL_CHANGE);
+        changeToken.setPendingEmail(newEmail);
+        changeToken.setExpiryDate(LocalDateTime.now().plusHours(24));
+        tokenRepository.save(changeToken);
+
+        String confirmationUrl = baseUrl + "/api/users/me/email/confirm?token=" + token;
+
+        emailService.sendSimpleEmail(newEmail, "Confirme mudança de email - Paganois",
+                String.format(
+                        "Você solicitou a mudança de email da sua conta Paganois.\n\n"
+                                + "Email atual: %s\n" + "Novo email: %s\n\n"
+                                + "Clique no link para confirmar: %s\n\n"
+                                + "Se você não solicitou esta mudança, ignore este email.",
+                        user.getEmail(), newEmail, confirmationUrl));
+    }
+
     public void deleteToken(VerificationToken verificationToken) {
         tokenRepository.delete(verificationToken);
     }

@@ -16,6 +16,7 @@ import com.atwo.paganois.dtos.CustomErrorResponse;
 import com.atwo.paganois.exceptions.ExpiredTokenException;
 import com.atwo.paganois.exceptions.InvalidTokenException;
 import com.atwo.paganois.exceptions.InvalidTokenTypeException;
+import com.atwo.paganois.exceptions.LoggedUserAndChangeEmailTokenMismatchException;
 import com.atwo.paganois.exceptions.TokenNotFoundException;
 import com.atwo.paganois.exceptions.UserAlreadyExistsException;
 import com.atwo.paganois.exceptions.UserNotVerifiedOrNotEnabledException;
@@ -121,6 +122,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(WrongPasswordException.class)
     public ResponseEntity<CustomErrorResponse> handleWrongPasswordException(
             WrongPasswordException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(LoggedUserAndChangeEmailTokenMismatchException.class)
+    public ResponseEntity<CustomErrorResponse> handleLoggedUserAndChangeEmailTokenMismatchException(
+            LoggedUserAndChangeEmailTokenMismatchException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
                 e.getMessage(), request.getRequestURI());
