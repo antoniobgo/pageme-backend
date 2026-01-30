@@ -1,7 +1,6 @@
 package com.atwo.paganois.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuração de Rate Limiting
@@ -9,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
  * Valores podem ser sobrescritos no application.properties: rate-limit.login.capacity=5
  * rate-limit.login.refill-tokens=5 rate-limit.login.refill-minutes=1
  */
-@Configuration
 @ConfigurationProperties(prefix = "rate-limit")
 public class RateLimitConfig {
 
