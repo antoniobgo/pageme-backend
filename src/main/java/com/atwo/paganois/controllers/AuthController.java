@@ -32,6 +32,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+// comentario teste para testar nova chave ssh
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "Autenticação", description = "Endpoints de autenticação")
