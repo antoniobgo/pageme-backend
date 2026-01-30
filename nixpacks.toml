@@ -1,5 +1,6 @@
+# nixpacks.toml
 [phases.setup]
-nixPkgs = ["...", "jdk21"]
+nixPkgs = ["jdk21", "maven"]
 
 [phases.build]
 cmds = ["mvn clean install -DskipTests"]
