@@ -6,6 +6,10 @@ Sistema de autenticação e autorização RESTful construído com Spring Boot 3 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen?style=flat&logo=spring)](https://spring.io/projects/spring-boot)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+### Link para teste da API via Swagger: 
+https://pageme-backend-production.up.railway.app/swagger-ui/index.html
+
+
 ## Índice
 
 - [Visão Geral](#visão-geral)
