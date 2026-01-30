@@ -106,29 +106,6 @@ O Paganois Auth System é uma aplicação completa de autenticação desenvolvid
 
 ## Arquitetura
 
-O projeto segue uma arquitetura em camadas com separação clara de responsabilidades:
-
-```
-┌─────────────────────────────────────────┐
-│          Controllers Layer              │
-│  (REST endpoints, validação de input)   │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│           Services Layer                │
-│     (Lógica de negócio principal)       │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│         Repositories Layer              │
-│      (Acesso a dados via JPA)           │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│          Database (H2)                  │
-└─────────────────────────────────────────┘
-```
-
 ### Componentes Principais
 
 **Controllers**
