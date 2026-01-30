@@ -1,0 +1,83 @@
+spring.application.name=paganois
+# Server
+server.port=8080
+
+# Database H2
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=true
+
+# H2 Console (para debug)
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# JWT Configuration
+jwt.secret=uuDCks6U7OIeEVnKigOa24bAcgUldzBU/U7QNBbcTEE=
+jwt.expiration=900000
+jwt.refresh-expiration=604800000
+
+# Logging
+logging.level.org.springframework.security=DEBUG
+
+# SMTP Mailtrap (para testes)
+spring.mail.host=sandbox.smtp.mailtrap.io
+spring.mail.port=2525
+spring.mail.username=95a992d016af77
+spring.mail.password=2e5646e58127f5
+
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Springdoc OpenAPI
+springdoc.api-docs.enabled=true
+springdoc.swagger-ui.enabled=true
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+
+springdoc.swagger-ui.operationsSorter=method
+springdoc.swagger-ui.tagsSorter=alpha
+springdoc.swagger-ui.try-it-out-enabled=true
+springdoc.swagger-ui.filter=true
+springdoc.swagger-ui.syntax-highlight.activated=true
+
+springdoc.packages-to-scan=com.atwo.paganois.controllers
+springdoc.paths-to-match=/auth/**, /api/**
+
+# URL base da aplicação
+app.base-url=http://localhost:8080
+
+# Rate Limiting Configuration
+# ---------------------------
+
+# Login: 5 tentativas por minuto (proteção contra brute force)
+rate-limit.login.capacity=5
+rate-limit.login.refill-tokens=5
+rate-limit.login.refill-minutes=1
+
+# Register: 3 registros por hora (evita spam de contas)
+rate-limit.register.capacity=3
+rate-limit.register.refill-tokens=3
+rate-limit.register.refill-minutes=60
+
+# Forgot Password: 3 solicitações por hora (evita spam de email)
+rate-limit.forgot-password.capacity=3
+rate-limit.forgot-password.refill-tokens=3
+rate-limit.forgot-password.refill-minutes=60
+
+# Resend Verification: 3 por hora
+rate-limit.resend-verification.capacity=3
+rate-limit.resend-verification.refill-tokens=3
+rate-limit.resend-verification.refill-minutes=60
+
+# Endpoints gerais: 100 requests por minuto
+rate-limit.general.capacity=100
+rate-limit.general.refill-tokens=100
+rate-limit.general.refill-minutes=1
+
+# Cache settings
+rate-limit.cache-max-size=10000
+rate-limit.cache-expire-minutes=60
