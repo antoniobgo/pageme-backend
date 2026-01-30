@@ -120,6 +120,7 @@ public class VerificationService {
         tokenRepository.delete(verificationToken);
     }
 
+    @Transactional
     public void deleteByUserIdAndType(Long id, TokenType type) {
         tokenRepository.deleteByUserIdAndType(id, type);
     }
