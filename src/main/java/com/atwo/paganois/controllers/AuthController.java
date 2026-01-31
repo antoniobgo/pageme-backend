@@ -32,7 +32,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-// comentario teste para testar nova chave ssh
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "Autenticação", description = "Endpoints de autenticação")
@@ -104,7 +103,7 @@ public class AuthController {
             description = "Envia email com link para redefinir senha. "
                     + "Por segurança, sempre retorna sucesso mesmo se o email em formáto válido não existir.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",
+            @ApiResponse(responseCode = "202",
                     description = "Solicitação aceita. Se o email existir, um link será enviado."),
             @ApiResponse(responseCode = "400",
                     description = "Email com formato inválido ou não fornecido")})
@@ -117,7 +116,7 @@ public class AuthController {
         MessageResponse response = new MessageResponse(
                 "Se o email existir em nosso sistema, você receberá instruções para redefinir sua senha.");
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
     @PostMapping("/resend-verification")

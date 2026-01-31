@@ -4,6 +4,7 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
@@ -25,6 +26,7 @@ public class SendGridEmailService extends EmailService {
     private String fromEmail;
 
     @Override
+    @Async("emailExecutor")
     public void sendSimpleEmail(String to, String subject, String text) {
         Email from = new Email(fromEmail);
         Email toEmail = new Email(to);
@@ -49,6 +51,7 @@ public class SendGridEmailService extends EmailService {
     }
 
     @Override
+    @Async("emailExecutor")
     public void sendHtmlEmail(String to, String subject, String htmlContent) {
         Email from = new Email(fromEmail);
         Email toEmail = new Email(to);
