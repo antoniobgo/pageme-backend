@@ -3,7 +3,6 @@ package com.atwo.paganois.services;
 import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
@@ -15,7 +14,6 @@ import com.sendgrid.helpers.mail.objects.Email;
 
 @Service
 @Primary
-@Profile("prod")
 public class SendGridEmailService extends EmailService {
 
     @Value("${sendgrid.api.key}")
