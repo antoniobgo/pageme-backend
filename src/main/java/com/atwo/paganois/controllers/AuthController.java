@@ -173,8 +173,6 @@ public class AuthController {
             max = 36, message = "Token deve ter 36 caracteres") String token) {
 
         authService.verifyEmail(token);
-
-        authService.verifyEmail(token);
         return ResponseEntity.ok(new MessageResponse("Email verificado com sucesso!"));
     }
 
