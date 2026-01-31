@@ -19,11 +19,6 @@ public class EmailService {
     protected String fromEmail;
 
     public void sendSimpleEmail(String to, String subject, String text) {
-        if (mailSender == null) {
-            throw new UnsupportedOperationException(
-                    "SMTP não configurado. Use SendGridEmailService.");
-        }
-
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
         message.setTo(to);
@@ -35,11 +30,6 @@ public class EmailService {
 
     public void sendHtmlEmail(String to, String subject, String htmlContent)
             throws MessagingException {
-        if (mailSender == null) {
-            throw new UnsupportedOperationException(
-                    "SMTP não configurado. Use SendGridEmailService.");
-        }
-
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
