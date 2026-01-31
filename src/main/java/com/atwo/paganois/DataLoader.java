@@ -11,7 +11,8 @@ import com.atwo.paganois.repositories.RoleRepository;
 import com.atwo.paganois.repositories.UserRepository;
 
 @Component
-@Profile("dev")
+// @Profile("dev")
+@Profile({"dev", "prod"})
 public class DataLoader implements CommandLineRunner {
 
     @Autowired
