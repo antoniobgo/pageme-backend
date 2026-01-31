@@ -1,7 +1,6 @@
 package com.atwo.paganois.entities;
 
 import org.springframework.security.core.GrantedAuthority;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "role")
+@Table(name = "roles")
 public class Role implements GrantedAuthority {
 
     @Id
@@ -18,8 +17,7 @@ public class Role implements GrantedAuthority {
 
     private String authority;
 
-    public Role() {
-    }
+    public Role() {}
 
     public Role(Long id, String authority) {
         this.id = id;
@@ -68,6 +66,6 @@ public class Role implements GrantedAuthority {
         return true;
     }
 
-    
+
 }
 
