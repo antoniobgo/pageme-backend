@@ -1,5 +1,7 @@
 package com.atwo.paganois.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -13,6 +15,8 @@ import jakarta.mail.internet.MimeMessage;
 @Service
 public class EmailService {
 
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
@@ -21,6 +25,7 @@ public class EmailService {
 
     @Async("emailExecutor")
     public void sendSimpleEmail(String to, String subject, String text) {
+        logger.debug("Preparando email para enviar");
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
         message.setTo(to);

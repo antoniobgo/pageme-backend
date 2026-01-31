@@ -3,6 +3,8 @@ package com.atwo.paganois.services;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,8 @@ public class VerificationService {
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
+
+    private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
 
     @Transactional
     public void sendPasswordReset(String email) {
@@ -59,7 +63,7 @@ public class VerificationService {
     // TODO: adicionar e tratar exceptions (MessagingException)
     @Transactional
     public void sendEmailVerification(User user) {
-
+        logger.debug("Iniciando processo de envio de email de verificação");
         tokenRepository.deleteByUserIdAndType(user.getId(), TokenType.EMAIL_VERIFICATION);
 
         String token = UUID.randomUUID().toString();

@@ -84,7 +84,6 @@ public class AuthService {
                 passwordEncoder.encode(registerRequest.getPassword()), registerRequest.getEmail());
 
         verificationService.sendEmailVerification(savedUser);
-
         return new RegisterResponse(savedUser.getId(), savedUser.getUsername(),
                 savedUser.isEmailVerified());
     }
