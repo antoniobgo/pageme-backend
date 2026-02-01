@@ -37,6 +37,9 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
 
     @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     @Autowired
@@ -62,14 +65,22 @@ public class AuthService {
     public LoginResponse refresh(RefreshRequest request) {
         String refreshToken = request.refreshToken();
 
+        if (refreshTokenService.isRevoked(refreshToken))
+            throw new InvalidTokenException("Token já foi usado ou revogado");
+
+
         if (!jwtUtil.validateToken(refreshToken))
             throw new InvalidTokenException("Token inválido ou expirado");
 
         String username = jwtUtil.extractUsername(refreshToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        String newAccessToken = jwtUtil.generateToken(userDetails);
 
-        return new LoginResponse(newAccessToken, refreshToken);
+        refreshTokenService.revokeToken(refreshToken);
+
+        String newAccessToken = jwtUtil.generateToken(userDetails);
+        String newRefreshToken = jwtUtil.generateRefreshToken(userDetails);
+
+        return new LoginResponse(newAccessToken, newRefreshToken);
     }
 
     @Transactional
