@@ -53,11 +53,8 @@ public class VerificationService {
         resetToken.setExpiryDate(LocalDateTime.now().plusHours(1));
         tokenRepository.save(resetToken);
 
-        String resetUrl = baseUrl + "/auth/reset-password?token=" + token;
-
         emailService.sendSimpleEmail(email, "Resetar senha - Paganois",
-                "Clique no link a seguir para resetar sua senha: \n" + resetUrl
-                        + "\n PS: testar via API Clients (Postman, Insonmia) caso sem frontend");
+                "Utilize esse token para resetar sua senha:\n" + token);
     }
 
     // TODO: adicionar e tratar exceptions (MessagingException)
