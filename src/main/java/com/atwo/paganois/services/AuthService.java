@@ -37,7 +37,7 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private RefreshTokenService refreshTokenService;
+    private TokenRevocationService tokenRevocationService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -65,17 +65,17 @@ public class AuthService {
     public LoginResponse refresh(RefreshRequest request) {
         String refreshToken = request.refreshToken();
 
-        if (refreshTokenService.isRevoked(refreshToken))
+        if (tokenRevocationService.isRevoked(refreshToken))
             throw new InvalidTokenException("Token já foi usado ou revogado");
 
 
-        if (!jwtUtil.validateToken(refreshToken))
+        if (!jwtUtil.validateTokenWithVersion(refreshToken))
             throw new InvalidTokenException("Token inválido ou expirado");
 
         String username = jwtUtil.extractUsername(refreshToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        refreshTokenService.revokeToken(refreshToken);
+        tokenRevocationService.revokeToken(refreshToken);
 
         String newAccessToken = jwtUtil.generateToken(userDetails);
         String newRefreshToken = jwtUtil.generateRefreshToken(userDetails);
@@ -128,6 +128,7 @@ public class AuthService {
         verificationService.sendPasswordReset(email);
     }
 
+    @Transactional
     public void resetPassword(String token, String newPassword) {
         VerificationToken verificationToken =
                 verificationService.validateToken(token, TokenType.PASSWORD_RESET);
@@ -138,4 +139,28 @@ public class AuthService {
 
         verificationService.deleteByUserIdAndType(user.getId(), verificationToken.getType());
     }
+
+    /**
+     * Logout normal - revoga apenas o token atual
+     */
+    @Transactional
+    public void logout(String accessToken, String refreshToken) {
+        // Valida se tokens são válidos antes de revogar
+        if (!jwtUtil.validateToken(accessToken) || !jwtUtil.validateToken(refreshToken)) {
+            throw new InvalidTokenException("Tokens inválidos");
+        }
+
+        // Revoga ambos os tokens
+        tokenRevocationService.revokeTokenPair(accessToken, refreshToken);
+    }
+
+    /**
+     * Logout global - revoga TODOS os tokens do usuário
+     */
+    @Transactional
+    public void logoutAllDevices(String username) {
+        tokenRevocationService.revokeAllUserTokens(username);
+    }
+
+
 }

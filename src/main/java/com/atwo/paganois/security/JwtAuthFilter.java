@@ -3,7 +3,6 @@ package com.atwo.paganois.security;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +12,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import com.atwo.paganois.services.CustomUserDetailsService;
-
+import com.atwo.paganois.services.TokenRevocationService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,15 +30,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
-    private static final List<String> PUBLIC_URLS = Arrays.asList(
-            "/auth/",
-            "/h2-console/",
-            "/v3/api-docs/",
-            "/api-docs/",
-            "/swagger-ui/",
-            "/swagger-ui.html",
-            "/swagger-resources/",
-            "/webjars/");
+    @Autowired
+    private TokenRevocationService tokenRevocationService;
+
+    private static final List<String> PUBLIC_URLS =
+            Arrays.asList("/auth/", "/h2-console/", "/v3/api-docs/", "/api-docs/", "/swagger-ui/",
+                    "/swagger-ui.html", "/swagger-resources/", "/webjars/");
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -55,10 +50,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         try {
             String authHeader = request.getHeader("Authorization");
@@ -66,19 +59,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
 
-                // Valida token
                 if (jwtUtil.validateToken(token)) {
+                    if (tokenRevocationService.isRevoked(token)) {
+                        logger.warn("Access token revogado individualmente");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    if (!jwtUtil.validateTokenWithVersion(token)) {
+                        logger.warn("Access token com versão desatualizada");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
                     String username = jwtUtil.extractUsername(token);
 
-                    // Verifica se não está autenticado ainda
-                    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    if (username != null
+                            && SecurityContextHolder.getContext().getAuthentication() == null) {
                         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                        // Cria authentication token
-                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities());
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(userDetails, null,
+                                        userDetails.getAuthorities());
 
                         authToken.setDetails(
                                 new WebAuthenticationDetailsSource().buildDetails(request));
