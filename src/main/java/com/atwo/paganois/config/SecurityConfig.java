@@ -1,6 +1,7 @@
 package com.atwo.paganois.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,42 +30,28 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @Value("${app.security.h2-console-enabled:false}")
+    private boolean h2ConsoleEnabled;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos
-                        .requestMatchers("/auth/**").permitAll().requestMatchers("/h2-console/**")
-                        .permitAll()
+                        .requestMatchers("/auth/login", "/auth/register", "/auth/refresh",
+                                "/auth/verify-email", "/auth/resend-verification",
+                                "/auth/forgot-password", "/auth/reset-password")
+                        .permitAll().requestMatchers("/auth/logout", "/auth/logout-all")
+                        .authenticated().requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/api-docs/**", "/swagger-ui/**",
                                 "/swagger-ui.html", "/swagger-resources/**", "/webjars/**")
-                        .permitAll()
-                        // .requestMatchers(
-                        // "/auth/login",
-                        // "/auth/register",
-                        // "/auth/refresh",
-                        // "/auth/verify-email",
-                        // "/auth/resend-verification",
-                        // "/auth/forgot-password",
-                        // "/auth/reset-password")
-                        // .permitAll()
-
-                        // Endpoints protegidos
-                        // TODO: verificar se controle de autorização será feito aqui
-                        // ou nos controllers
-                        // .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
-
-                        // Qualquer outra coisa precisa autenticação
-                        .anyRequest().authenticated())
-                // .anyRequest().permitAll())
+                        .permitAll().anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // Para H2 Console funcionar
-        http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
+        if (h2ConsoleEnabled)
+            http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
         return http.build();
     }
