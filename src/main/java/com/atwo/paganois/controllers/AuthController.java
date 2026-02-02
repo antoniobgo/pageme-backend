@@ -4,6 +4,8 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +23,7 @@ import com.atwo.paganois.dtos.RegisterRequest;
 import com.atwo.paganois.dtos.RegisterResponse;
 import com.atwo.paganois.dtos.ResendEmailVerificationRequest;
 import com.atwo.paganois.dtos.ResetPasswordRequest;
+import com.atwo.paganois.entities.User;
 import com.atwo.paganois.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -188,15 +191,29 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Refresh token inválido"),
             @ApiResponse(responseCode = "401", description = "Não autenticado")})
     @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request,
             HttpServletRequest httpRequest) {
 
-        // Extrai access token do header
         String authHeader = httpRequest.getHeader("Authorization");
-        String accessToken = authHeader.substring(7); // Remove "Bearer "
+        String accessToken = authHeader.substring(7);
 
         authService.logout(accessToken, request.refreshToken());
 
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/logout-all")
+    @Operation(summary = "Fazer logout de todos os dispositivos",
+            description = "Revoga TODOS os tokens do usuário. "
+                    + "O usuário será deslogado de todos os dispositivos e precisará fazer login novamente.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Logout global realizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autenticado")})
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    public ResponseEntity<Void> logoutAllDevices(@AuthenticationPrincipal User user) {
+        authService.logoutAllDevices(user.getUsername());
         return ResponseEntity.noContent().build();
     }
 

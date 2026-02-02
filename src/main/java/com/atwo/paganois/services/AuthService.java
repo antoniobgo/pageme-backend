@@ -70,7 +70,7 @@ public class AuthService {
 
 
         if (!jwtUtil.validateTokenWithVersion(refreshToken))
-            throw new InvalidTokenException("Token inválido ou expirado");
+            throw new InvalidTokenException("Token inválido, expirado ou com versão desatualizada");
 
         String username = jwtUtil.extractUsername(refreshToken);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);

@@ -1,8 +1,6 @@
 package com.atwo.paganois.security;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,22 +30,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private TokenRevocationService tokenRevocationService;
-
-    private static final List<String> PUBLIC_URLS =
-            Arrays.asList("/auth/", "/h2-console/", "/v3/api-docs/", "/api-docs/", "/swagger-ui/",
-                    "/swagger-ui.html", "/swagger-resources/", "/webjars/");
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        boolean isPublic = PUBLIC_URLS.stream().anyMatch(path::startsWith);
-
-        if (isPublic) {
-            logger.debug("Skipping JWT filter for public URL: {}", path);
-        }
-
-        return isPublic;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
