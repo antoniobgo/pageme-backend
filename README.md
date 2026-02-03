@@ -1,4 +1,4 @@
-# Paganois Auth System
+# Auth System
 
 Sistema de autenticação e autorização RESTful construído com Spring Boot 3 e Spring Security 6, implementando JWT, verificação de email, reset de senha e rate limiting.
 
