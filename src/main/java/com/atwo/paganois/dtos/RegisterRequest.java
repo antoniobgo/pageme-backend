@@ -22,7 +22,7 @@ public class RegisterRequest {
     @Email
     private String email;
 
-    @Schema(description = "Senha do usuário", example = "strong@paSSworD!", minLength = 8,
+    @Schema(description = "Senha do usuário", example = "strong2@paSSworD!", minLength = 8,
             maxLength = 40, format = "password")
     @NotBlank(message = "Senha é obrigatória")
     @Size(min = 6, max = 40, message = "Senha deve ter entre 8 e 40 caracteres")
