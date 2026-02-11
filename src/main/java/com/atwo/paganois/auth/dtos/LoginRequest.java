@@ -12,7 +12,7 @@ public record LoginRequest(
                 maxLength = 50) @NotBlank(message = "Username é obrigatório") @Size(max = 50,
                         message = "Username deve ter no máximo 50 caracteres") String username,
 
-        @Schema(description = "Senha do usuário", example = "password!",
+        @Schema(description = "Senha do usuário", example = "password",
                 requiredMode = Schema.RequiredMode.REQUIRED, format = "password",
                 maxLength = 40) @NotBlank(message = "Password é obrigatório") @Size(max = 40,
                         message = "Senha deve ter no máximo 40 caracteres") String password
