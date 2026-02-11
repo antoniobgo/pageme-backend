@@ -2,14 +2,27 @@ package com.atwo.paganois.user.dtos;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import com.atwo.paganois.user.entities.User;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Informações públicas do perfil do usuário")
 public class UserDTO {
 
+    @Schema(description = "ID único do usuário", example = "1")
     private Long id;
+
+    @Schema(description = "Nome de usuário", example = "joaosilva")
     private String username;
+
+    @Schema(description = "Endereço de email", example = "joao.silva@example.com")
     private String email;
+
+    @Schema(description = "Role do usuário no sistema")
     private RoleDTO role;
+
+    @Schema(description = "Indica se a conta está ativa", example = "true")
     private boolean enabled = true;
+
+    @Schema(description = "Indica se o email foi verificado", example = "true")
     private boolean emailVerified;
 
     public UserDTO() {}

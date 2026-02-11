@@ -47,18 +47,37 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    @Operation(summary = "Fazer login",
-            description = "Autentica usuário e retorna access token e refresh token JWT")
-    @ApiResponses(
-            value = {
-                    @ApiResponse(responseCode = "200", description = "Login realizado com sucesso",
-                            content = @Content(
-                                    schema = @Schema(implementation = LoginResponse.class))),
-                    @ApiResponse(responseCode = "400",
-                            description = "Dados de login inválidos (validação)"),
-                    @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
-                    @ApiResponse(responseCode = "403",
-                            description = "Conta desabilitada ou não verificada")})
+    @Operation(summary = "Autenticar usuário", description = """
+            Autentica o usuário e retorna access token e refresh token JWT.
+
+            ### Tokens Retornados
+            - **Access Token**: Válido por **15 minutos**. Use em todas as requisições autenticadas.
+            - **Refresh Token**: Válido por **7 dias**. Use para renovar tokens expirados.
+
+            ### Como Usar
+            Aceita **username** no campo username.
+
+            ### Pré-requisitos
+            - Email deve estar verificado
+            - Credenciais devem estar corretas
+
+            ### Rate Limit
+            **5 tentativas por minuto** por IP para proteção contra brute force.
+            """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Login realizado com sucesso",
+                    content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400",
+                    description = "Dados de entrada inválidos (validação falhou)",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "401",
+                    description = "Credenciais inválidas ou email não verificado",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "403", description = "Conta desabilitada",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     @SecurityRequirements
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
@@ -66,35 +85,66 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Renovar access token",
-            description = "Gera novo access token usando refresh token válido")
-    @ApiResponses(
-            value = {
-                    @ApiResponse(responseCode = "200", description = "Token renovado com sucesso",
-                            content = @Content(
-                                    schema = @Schema(implementation = LoginResponse.class))),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Formato do refresh token inválido"),
-                    @ApiResponse(responseCode = "401",
-                            description = "Refresh token inválido ou expirado")})
     @SecurityRequirements
+    @Operation(summary = "Renovar access token", description = """
+            Gera novos access e refresh tokens usando um refresh token válido.
+
+            ### Quando Usar
+            Use este endpoint quando o access token expirar (após 15 minutos).
+
+            ### ⚡ Resposta
+            Retorna:
+            - Novo **access token** (válido por 15 min)
+            - Novo **refresh token** (válido por 7 dias)
+
+            O refresh token antigo será **invalidado** após uso.
+
+            ### Rate Limit
+            100 requisições por minuto (limite geral).
+            """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "✅ Tokens renovados com sucesso",
+                    content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400",
+                    description = "Refresh token ausente ou formato inválido",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "401", description = "Refresh token expirado ou revogado",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshRequest request) {
         LoginResponse response = authService.refresh(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Registrar novo usuário",
-            description = "Cria uma nova conta de usuário e envia email de confirmação. "
-                    + "O usuário precisa verificar o email antes de fazer login.")
-    @ApiResponses(value = {
+    @SecurityRequirements
+    @Operation(summary = "Criar nova conta de usuário", description = """
+            Cria um novo usuário no sistema e envia email de verificação automaticamente.
+
+            ### Requisitos de Senha
+            - Mínimo **8 caracteres**
+            - Pelo menos **uma letra maiúscula** (A-Z)
+            - Pelo menos **uma letra minúscula** (a-z)
+            - Pelo menos **um número** (0-9)
+            - Pelo menos **um caractere especial** (@, #, $, %, etc.)
+
+            ### Verificação de Email
+            Após o registro, um email será enviado com link de verificação.
+
+            ### Rate Limit
+            **3 registros por hora** por endereço IP para prevenir spam.
+            """)
+    @ApiResponses({
             @ApiResponse(responseCode = "201",
                     description = "Usuário criado com sucesso. Email de verificação enviado.",
                     content = @Content(schema = @Schema(implementation = RegisterResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Dados de registro inválidos"),
-            @ApiResponse(responseCode = "409", description = "Username ou email já existe")})
-    @SecurityRequirements
+            @ApiResponse(responseCode = "400", description = "Dados inválidos (validação falhou)",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "409", description = "Username ou email já existe",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         RegisterResponse response = authService.register(request);
 
@@ -105,15 +155,29 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    @Operation(summary = "Solicitar reset de senha",
-            description = "Envia email com link para redefinir senha. "
-                    + "Por segurança, sempre retorna sucesso mesmo se o email em formáto válido não existir.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "202",
-                    description = "Solicitação aceita. Se o email existir, um link será enviado."),
-            @ApiResponse(responseCode = "400",
-                    description = "Email com formato inválido ou não fornecido")})
     @SecurityRequirements
+    @Operation(summary = "Solicitar reset de senha", description = """
+            Envia email com link para redefinição de senha.
+
+            ### Comportamento
+            - Se o email existir, um token de reset será gerado
+            - Email enviado com link válido por **1 hora**
+            - Se o email não existir, retorna sucesso (segurança)
+
+            ### Segurança
+            Por motivos de segurança, sempre retorna status 202, mesmo se o
+            email não estiver cadastrado. Isso previne enumeração de usuários.
+
+            ### Rate Limit
+            **3 solicitações por hora** por IP.
+            """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "202",
+                    description = "Se o email existir, instruções foram enviadas",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Email inválido ou ausente",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<MessageResponse> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) {
 
@@ -126,14 +190,33 @@ public class AuthController {
     }
 
     @PostMapping("/resend-verification")
-    @Operation(summary = "Reenviar email de verificação",
-            description = "Reenvia o email de confirmação de conta. "
-                    + "Por segurança, sempre retorna sucesso.")
-    @ApiResponses(value = {@ApiResponse(responseCode = "202",
-            description = "Solicitação aceita. Se o email existir e não estiver verificado, um novo link será enviado."),
-            @ApiResponse(responseCode = "400",
-                    description = "Email com formato inválido ou não fornecido")})
     @SecurityRequirements
+    @Operation(summary = "Reenviar email de verificação", description = """
+            Reenvia o email de verificação para usuários não verificados.
+
+            ### Quando Usar
+            - Email de verificação não chegou
+            - Token de verificação expirou (24h)
+            - Email foi perdido ou deletado
+
+            ### Comportamento
+            - Gera novo token de verificação
+            - Invalida token anterior
+            - Envia novo email com link atualizado
+            - Por segurança, sempre retorna sucesso
+
+            ### Pré-requisito
+            Usuário deve estar registrado mas **não verificado**.
+
+            ### Rate Limit
+            **3 solicitações por hora** por IP para prevenir spam.
+            """)
+    @ApiResponses({@ApiResponse(responseCode = "202",
+            description = "✅ Se o email existir e não estiver verificado, novo link será enviado",
+            content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "400",
+                    description = "Email com formato inválido ou não fornecido", content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<MessageResponse> resendVerification(
             @Valid @RequestBody ResendEmailVerificationRequest request) {
 
@@ -146,15 +229,33 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    @Operation(summary = "Resetar senha",
-            description = "Define nova senha usando token de reset recebido por email")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Senha redefinida com sucesso"),
-            @ApiResponse(responseCode = "400",
-                    description = "Senha não atende aos requisitos mínimos ou tipo de token inválido"),
-            @ApiResponse(responseCode = "404", description = "Token não encontrado"),
-            @ApiResponse(responseCode = "410", description = "Token expirado")})
     @SecurityRequirements
+    @Operation(summary = "Redefinir senha com token", description = """
+            Redefine a senha do usuário usando o token recebido por email.
+
+            ### Token
+            - Obtido via email enviado em `/auth/forgot-password`
+            - Válido por **1 hora**
+            - **Uso único** - token é invalidado após uso
+
+            ### Requisitos de Nova Senha
+            Mesmos requisitos de registro (validado via @StrongPassword):
+            - Mínimo 8 caracteres
+            - Letra maiúscula, minúscula, número e caractere especial
+
+            ### Rate Limit
+            100 requisições por minuto (limite geral).
+            """)
+    @ApiResponses({@ApiResponse(responseCode = "204", description = "Senha redefinida com sucesso"),
+            @ApiResponse(responseCode = "400",
+                    description = "Token inválido ou senha não atende requisitos",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "404", description = "🔍 Token não encontrado",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "410", description = "Token expirado", content = @Content(
+                    schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
 
         authService.resetPassword(request.token(), request.newPassword());
@@ -163,18 +264,38 @@ public class AuthController {
     }
 
     @GetMapping("/verify-email")
-    @Operation(summary = "Verificar email",
-            description = "Confirma email do usuário através do token enviado por email. "
-                    + "Retorna página HTML para melhor experiência do usuário.")
-    @ApiResponses(
-            value = {
-                    @ApiResponse(responseCode = "200", description = "Email verificado com sucesso",
-                            content = @Content(
-                                    schema = @Schema(implementation = MessageResponse.class))),
-                    @ApiResponse(responseCode = "400", description = "Tipo de token inválido"),
-                    @ApiResponse(responseCode = "404", description = "Token não encontrado"),
-                    @ApiResponse(responseCode = "410", description = "Token expirado")})
     @SecurityRequirements
+    @Operation(summary = "Verificar email do usuário", description = """
+            Confirma o email do usuário através do token enviado por email.
+
+            ### Processo
+            1. Usuário clica no link recebido no email de registro
+            2. Token é validado
+            3. Email é marcado como verificado
+            4. Usuário pode fazer login
+
+            ### Token
+            - Válido por **24 horas**
+            - **Uso único** - invalidado após verificação
+
+            ### Após Verificação
+            O usuário poderá fazer login normalmente.
+
+            ### Rate Limit
+            100 requisições por minuto (limite geral).
+            """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "200",
+                    description = "Email verificado com sucesso. Agora você pode fazer login!",
+                    content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Tipo de token inválido",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "404", description = "Token não encontrado no sistema",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "410", description = "Token expirado", content = @Content(
+                    schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<MessageResponse> verifyEmail(@RequestParam @NotBlank @Size(min = 36,
             max = 36, message = "Token deve ter 36 caracteres") String token) {
 
@@ -183,14 +304,28 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Fazer logout",
-            description = "Revoga o access token e refresh token atual. "
-                    + "O usuário precisará fazer login novamente neste dispositivo.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Logout realizado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Refresh token inválido"),
-            @ApiResponse(responseCode = "401", description = "Não autenticado")})
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Fazer logout", description = """
+            Invalida o refresh token do usuário, efetivando o logout deste dispositivo.
+
+            ### Comportamento
+            - O refresh token fornecido será **revogado**
+            - O access token continuará válido até expirar naturalmente (15 min)
+            - Para segurança máxima, remova ambos tokens do client-side
+
+            ### Autenticação Necessária
+            Requer access token válido no header Authorization.
+
+            ### Rate Limit
+            100 requisições por minuto (limite geral).
+            """)
+    @ApiResponses({@ApiResponse(responseCode = "204", description = "Logout realizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Refresh token inválido",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "401", description = "Access token inválido ou ausente",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest request,
             HttpServletRequest httpRequest) {
@@ -204,13 +339,34 @@ public class AuthController {
     }
 
     @PostMapping("/logout-all")
-    @Operation(summary = "Fazer logout de todos os dispositivos",
-            description = "Revoga TODOS os tokens do usuário. "
-                    + "O usuário será deslogado de todos os dispositivos e precisará fazer login novamente.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Logout global realizado com sucesso"),
-            @ApiResponse(responseCode = "401", description = "Não autenticado")})
     @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Fazer logout de todos os dispositivos", description = """
+            Revoga **TODOS** os tokens do usuário simultaneamente.
+
+            ### Comportamento
+            - Invalida todos os refresh tokens do usuário
+            - Access tokens existentes continuam válidos até expirarem
+            - Usuário será deslogado de **todos os dispositivos**
+            - Útil em caso de segurança comprometida
+
+            ### Caso de Uso
+            Use quando:
+            - Suspeitar que sua conta foi acessada indevidamente
+            - Quiser deslogar de todos os dispositivos remotamente
+            - Perdeu acesso a algum dispositivo
+
+            ### Autenticação Necessária
+            Requer access token válido.
+
+            ### Rate Limit
+            100 requisições por minuto (limite geral).
+            """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "204",
+                    description = "Logout global realizado. Todos os tokens foram revogados."),
+            @ApiResponse(responseCode = "401", description = "Access token inválido ou ausente",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Void> logoutAllDevices(@AuthenticationPrincipal User user) {
         authService.logoutAllDevices(user.getUsername());

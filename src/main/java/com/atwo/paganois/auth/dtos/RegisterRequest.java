@@ -9,21 +9,30 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "Request para registro de novo usuário")
 public class RegisterRequest {
 
-    @Schema(description = "Nome de usuário único", example = "userdasilva", minLength = 6,
-            maxLength = 50)
+    @Schema(description = "Nome de usuário único no sistema (apenas letras, números e underscore)",
+            example = "joaosilva", requiredMode = Schema.RequiredMode.REQUIRED, minLength = 6,
+            maxLength = 50, pattern = "^[a-zA-Z0-9_]+$")
     @NotBlank(message = "Username é obrigatório")
     @Size(min = 6, max = 50, message = "Username deve ter entre 6 e 50 caracteres")
     private String username;
 
-    @Schema(description = "Email do usuário", example = "joao@example.com", format = "email",
-            minLength = 6, maxLength = 50)
+    @Schema(description = "Endereço de email válido e único", example = "joao.silva@example.com",
+            requiredMode = Schema.RequiredMode.REQUIRED, format = "email", minLength = 6,
+            maxLength = 50)
     @NotBlank(message = "Email é obrigatório")
     @Size(min = 6, max = 50, message = "Email deve ter entre 6 e 50 caracteres")
     @Email
     private String email;
 
-    @Schema(description = "Senha do usuário", example = "strong2@paSSworD!", minLength = 8,
-            maxLength = 40, format = "password")
+    @Schema(description = """
+            Senha segura que deve conter:
+            - Mínimo 8 caracteres
+            - Pelo menos 1 letra maiúscula
+            - Pelo menos 1 letra minúscula
+            - Pelo menos 1 número
+            - Pelo menos 1 caractere especial (@#$%^&+=!)
+            """, example = "S3nh@Fort3!", requiredMode = Schema.RequiredMode.REQUIRED,
+            format = "password", minLength = 8, maxLength = 40)
     @NotBlank(message = "Senha é obrigatória")
     @Size(min = 6, max = 40, message = "Senha deve ter entre 8 e 40 caracteres")
     @StrongPassword
