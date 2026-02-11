@@ -1,5 +1,6 @@
 package com.atwo.paganois.auth.services;
 
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -122,7 +123,10 @@ public class AuthService {
 
     @Transactional
     public void sendPasswordResetEmail(String email) {
-        verificationService.sendPasswordReset(email);
+        Optional<User> userOptional = userService.findByEmailOptional(email);
+        if (userOptional.isEmpty())
+            return;
+        verificationService.sendPasswordReset(userOptional.get());
     }
 
     @Transactional

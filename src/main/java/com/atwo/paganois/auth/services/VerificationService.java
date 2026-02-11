@@ -1,7 +1,6 @@
 package com.atwo.paganois.auth.services;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import com.atwo.paganois.auth.exceptions.TokenNotFoundException;
 import com.atwo.paganois.auth.repositories.VerificationTokenRepository;
 import com.atwo.paganois.email.services.EmailService;
 import com.atwo.paganois.user.entities.User;
-import com.atwo.paganois.user.services.UserService;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -24,9 +22,6 @@ public class VerificationService {
 
     @Autowired
     private VerificationTokenRepository tokenRepository;
-
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private EmailService emailService;
@@ -37,13 +32,7 @@ public class VerificationService {
     private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
 
     @Transactional
-    public void sendPasswordReset(String email) {
-        Optional<User> userOptional = userService.findByEmailOptional(email);
-        if (userOptional.isEmpty())
-            return;
-
-        User user = userOptional.get();
-
+    public void sendPasswordReset(User user) {
         tokenRepository.deleteByUserIdAndType(user.getId(), TokenType.PASSWORD_RESET);
 
         String token = UUID.randomUUID().toString();
@@ -55,7 +44,7 @@ public class VerificationService {
         resetToken.setExpiryDate(LocalDateTime.now().plusHours(1));
         tokenRepository.save(resetToken);
 
-        emailService.sendSimpleEmail(email, "Resetar senha - Paganois",
+        emailService.sendSimpleEmail(user.getEmail(), "Resetar senha - Paganois",
                 "Utilize esse token para resetar sua senha:\n" + token);
     }
 
