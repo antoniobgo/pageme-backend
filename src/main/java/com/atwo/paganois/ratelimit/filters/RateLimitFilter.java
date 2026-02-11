@@ -45,13 +45,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         String ip = getClientIP(request);
         String path = request.getRequestURI();
-        String method = request.getMethod();
-
-        // Só aplica rate limit para POST (mutações)
-        if (!"POST".equalsIgnoreCase(method)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         RateLimitResult result = getRateLimitResult(path, ip);
 

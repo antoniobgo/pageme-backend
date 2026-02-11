@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -74,7 +74,7 @@ public class UserController {
         return ResponseEntity.ok(userResponse);
     }
 
-    @PostMapping(path = "/me/password")
+    @PatchMapping(path = "/me/password")
     @Operation(summary = "Alterar senha do usuário autenticado", description = """
             Permite que o usuário altere sua própria senha.
 
@@ -109,7 +109,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping(path = "/me/email")
+    @PatchMapping(path = "/me/email")
     @Operation(summary = "Solicitar mudança de email", description = """
             Inicia processo de mudança de email do usuário autenticado.
 

@@ -15,7 +15,7 @@ public class RateLimitConfig {
     private EndpointLimit register = new EndpointLimit(3, 3, 60);
     private EndpointLimit forgotPassword = new EndpointLimit(3, 3, 60);
     private EndpointLimit resendVerification = new EndpointLimit(3, 3, 60);
-    private EndpointLimit general = new EndpointLimit(100, 100, 1);
+    private EndpointLimit general = new EndpointLimit(40, 40, 1);
 
     // Cache settings
     private int cacheMaxSize = 10000;
