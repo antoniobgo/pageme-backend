@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,17 +21,15 @@ import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
-
+import com.atwo.paganois.email.services.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 /**
  * Testes unitários para EmailService
  * 
- * Estrutura:
- * - Testes de sendSimpleEmail (envio de email texto puro)
- * - Testes de sendHtmlEmail (envio de email HTML)
- * - Cenários de erro/exceção
+ * Estrutura: - Testes de sendSimpleEmail (envio de email texto puro) - Testes de sendHtmlEmail
+ * (envio de email HTML) - Cenários de erro/exceção
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("EmailService - Testes Unitários")
@@ -81,7 +78,8 @@ class EmailServiceTest {
         @DisplayName("Deveria configurar destinatário corretamente")
         void deveria_ConfigurarDestinatario_Corretamente() {
             // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
@@ -90,17 +88,15 @@ class EmailServiceTest {
             verify(mailSender).send(messageCaptor.capture());
             SimpleMailMessage sentMessage = messageCaptor.getValue();
 
-            assertThat(sentMessage.getTo())
-                    .isNotNull()
-                    .hasSize(1)
-                    .contains(TO_EMAIL);
+            assertThat(sentMessage.getTo()).isNotNull().hasSize(1).contains(TO_EMAIL);
         }
 
         @Test
         @DisplayName("Deveria configurar remetente corretamente")
         void deveria_ConfigurarRemetente_Corretamente() {
             // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
@@ -116,7 +112,8 @@ class EmailServiceTest {
         @DisplayName("Deveria configurar assunto corretamente")
         void deveria_ConfigurarAssunto_Corretamente() {
             // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
@@ -132,7 +129,8 @@ class EmailServiceTest {
         @DisplayName("Deveria configurar corpo do email corretamente")
         void deveria_ConfigurarCorpo_Corretamente() {
             // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
@@ -148,7 +146,8 @@ class EmailServiceTest {
         @DisplayName("Deveria configurar todos os campos corretamente em uma única chamada")
         void deveria_ConfigurarTodosCampos_Corretamente() {
             // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
@@ -167,8 +166,8 @@ class EmailServiceTest {
         @DisplayName("Deveria propagar exceção quando JavaMailSender falha")
         void deveria_PropagarExcecao_QuandoMailSenderFalha() {
             // Arrange
-            doThrow(new MailSendException("SMTP server error"))
-                    .when(mailSender).send(any(SimpleMailMessage.class));
+            doThrow(new MailSendException("SMTP server error")).when(mailSender)
+                    .send(any(SimpleMailMessage.class));
 
             // Act & Assert
             assertThatThrownBy(() -> emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT))
@@ -216,14 +215,13 @@ class EmailServiceTest {
 
         @Test
         @DisplayName("Deveria lançar MessagingException quando configuração falha")
-        void deveria_LancarMessagingException_QuandoConfiguracaoFalha()
-                throws MessagingException {
+        void deveria_LancarMessagingException_QuandoConfiguracaoFalha() throws MessagingException {
             // Arrange
             // Simula erro ao configurar MimeMessage
             MimeMessage faultyMessage = mock(MimeMessage.class);
             when(mailSender.createMimeMessage()).thenReturn(faultyMessage);
-            doThrow(new MessagingException("Invalid email address"))
-                    .when(faultyMessage).setFrom(any(jakarta.mail.internet.InternetAddress.class));
+            doThrow(new MessagingException("Invalid email address")).when(faultyMessage)
+                    .setFrom(any(jakarta.mail.internet.InternetAddress.class));
 
             // Act & Assert
             assertThatThrownBy(() -> emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, HTML_CONTENT))
@@ -234,8 +232,8 @@ class EmailServiceTest {
         @DisplayName("Deveria propagar exceção quando envio de MimeMessage falha")
         void deveria_PropagarExcecao_QuandoEnvioMimeFalha() {
             // Arrange
-            doThrow(new MailSendException("Connection timeout"))
-                    .when(mailSender).send(any(MimeMessage.class));
+            doThrow(new MailSendException("Connection timeout")).when(mailSender)
+                    .send(any(MimeMessage.class));
 
             // Act & Assert
             assertThatThrownBy(() -> emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, HTML_CONTENT))
@@ -247,8 +245,8 @@ class EmailServiceTest {
         @DisplayName("Deveria não lançar exceção quando email HTML é enviado com sucesso")
         void deveria_NaoLancarExcecao_QuandoHtmlEnviadoComSucesso() {
             // Act & Assert - não deve lançar exceção
-            org.junit.jupiter.api.Assertions
-                    .assertDoesNotThrow(() -> emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, HTML_CONTENT));
+            org.junit.jupiter.api.Assertions.assertDoesNotThrow(
+                    () -> emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, HTML_CONTENT));
         }
     }
 
@@ -265,7 +263,8 @@ class EmailServiceTest {
         void deveria_EnviarEmail_ComAssuntoVazio() {
             // Arrange
             String emptySubject = "";
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, emptySubject, TEXT_CONTENT);
@@ -280,7 +279,8 @@ class EmailServiceTest {
         void deveria_EnviarEmail_ComConteudoVazio() {
             // Arrange
             String emptyContent = "";
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, emptyContent);
@@ -295,7 +295,8 @@ class EmailServiceTest {
         void deveria_EnviarEmail_ComConteudoLongo() {
             // Arrange
             String longContent = "A".repeat(10000);
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, longContent);
@@ -310,7 +311,8 @@ class EmailServiceTest {
         void deveria_EnviarEmail_ComCaracteresEspeciais() {
             // Arrange
             String specialSubject = "Olá! 你好 🎉 <test>";
-            ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, specialSubject, TEXT_CONTENT);

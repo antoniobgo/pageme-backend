@@ -5,10 +5,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import com.atwo.paganois.entities.Role;
-import com.atwo.paganois.entities.User;
-import com.atwo.paganois.repositories.RoleRepository;
-import com.atwo.paganois.repositories.UserRepository;
+import com.atwo.paganois.user.entities.Role;
+import com.atwo.paganois.user.entities.User;
+import com.atwo.paganois.user.repositories.RoleRepository;
+import com.atwo.paganois.user.repositories.UserRepository;
 
 @Component
 @Profile("dev")

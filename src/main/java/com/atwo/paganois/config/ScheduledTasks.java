@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import com.atwo.paganois.services.CustomUserDetailsService;
+import com.atwo.paganois.user.services.UserService;
 
 @Component
 public class ScheduledTasks {
@@ -13,7 +13,7 @@ public class ScheduledTasks {
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private UserService userService;
 
     @Scheduled(cron = "0 0 3 * * *")
     public void cleanupExpiredUnverifiedUsers() {
@@ -21,7 +21,7 @@ public class ScheduledTasks {
 
         logger.info("Iniciando limpeza de usuários não verificados (>{} dias)", daysToExpire);
 
-        int deletedCount = userDetailsService.cleanupExpiredUnverifiedUsers(daysToExpire);
+        int deletedCount = userService.cleanupExpiredUnverifiedUsers(daysToExpire);
 
         logger.info("Limpeza concluída: {} usuários não verificados removidos", deletedCount);
     }

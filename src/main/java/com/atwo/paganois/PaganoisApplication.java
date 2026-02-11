@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import com.atwo.paganois.config.RateLimitConfig;
+import com.atwo.paganois.ratelimit.config.RateLimitConfig;
 
 @SpringBootApplication
 @EnableScheduling
