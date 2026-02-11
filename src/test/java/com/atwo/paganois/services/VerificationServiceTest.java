@@ -228,7 +228,6 @@
 // .contains("Clique no link");
 // }
 
-// //TODO: consertar o método testado aqui (Should not throw exception.....)
 // // @Test
 // // @DisplayName("Should not throw exception when user not found (security)")
 // // void shouldNotThrowException_WhenUserNotFound() {

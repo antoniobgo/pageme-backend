@@ -48,8 +48,6 @@ public class VerificationService {
                 "Utilize esse token para resetar sua senha:\n" + token);
     }
 
-    // TODO: adicionar e tratar exceptions (MessagingException)
-    // TODO: deletar tokens antigos
     @Transactional
     public void sendEmailVerification(User user) {
         logger.debug("Iniciando processo de envio de email de verificação");

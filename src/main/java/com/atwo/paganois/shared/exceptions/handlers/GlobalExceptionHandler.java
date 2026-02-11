@@ -137,7 +137,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(err);
     }
 
-    // TODO: fazer esse general handler
+    // TODO: analiser se necessario um general handler
 
     // @ExceptionHandler(Exception.class)
     // public ResponseEntity<CustomErrorResponse> handleGeneral(Exception e) {

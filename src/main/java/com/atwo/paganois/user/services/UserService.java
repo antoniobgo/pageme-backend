@@ -168,14 +168,4 @@ public class UserService {
         return userRepository.deleteExpiredUnverifiedUsers(expiryDate);
     }
 
-
-
-    // TODO: adicionar exception no handler
-    // TODO: terminar fluxo de update email
-    // public void updateEmail(User user, String email){
-    // if(userRepository.existsByEmail(email)) throw new EmailAlreadyTakenException("Email já em
-    // uso");
-
-    // }
-
 }
