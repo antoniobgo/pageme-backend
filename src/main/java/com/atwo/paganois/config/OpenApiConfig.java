@@ -1,6 +1,7 @@
 package com.atwo.paganois.config;
 
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -84,7 +85,9 @@ public class OpenApiConfig {
                                 .addSecuritySchemes(securitySchemeName,
                                         new SecurityScheme().name(securitySchemeName)
                                                 .type(SecurityScheme.Type.HTTP).scheme("bearer")
-                                                .bearerFormat("JWT").description(
+                                                .bearerFormat(
+                                                        "JWT")
+                                                .description(
                                                         """
                                                                 ### Como Autenticar
 
@@ -112,12 +115,19 @@ public class OpenApiConfig {
                                         .addProperty("error",
                                                 new Schema<>().type("string")
                                                         .example("Bad Request"))
-                                        .addProperty("message",
+                                        .addProperty("error",
                                                 new Schema<>().type("string")
-                                                        .example("Dados inválidos fornecidos"))
+                                                        .example("Dados fornecidos inválidos"))
                                         .addProperty("path",
                                                 new Schema<>().type("string")
-                                                        .example("/auth/login"))))
+                                                        .example("/auth/login")))
+                                .addSchemas("ValidationErrorResponse", new Schema<>().type("object")
+                                        .description("Erros de validação de campos")
+                                        .additionalProperties(new Schema<>().type("string"))
+                                        .example(Map.of("username", "Username é obrigatório",
+                                                "password", "Senha deve ter no mínimo 8 caracteres",
+                                                "email", "Email inválido"))))
+
 
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName));
     }

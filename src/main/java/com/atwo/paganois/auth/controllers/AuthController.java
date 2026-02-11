@@ -77,6 +77,10 @@ public class AuthController {
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "403", description = "Conta desabilitada",
                     content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "429",
+                    description = "Rate limit excedido. Aguarde antes de tentar novamente.",
+                    content = @Content(
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     @SecurityRequirements
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -144,6 +148,10 @@ public class AuthController {
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "409", description = "Username ou email já existe",
                     content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "429",
+                    description = "Rate limit excedido. Aguarde antes de tentar novamente.",
+                    content = @Content(
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         RegisterResponse response = authService.register(request);
@@ -176,6 +184,10 @@ public class AuthController {
                     description = "Se o email existir, instruções foram enviadas",
                     content = @Content(schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "400", description = "Email inválido ou ausente",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "429",
+                    description = "Rate limit excedido. Aguarde antes de tentar novamente.",
                     content = @Content(
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<MessageResponse> forgotPassword(
@@ -215,7 +227,12 @@ public class AuthController {
             description = "✅ Se o email existir e não estiver verificado, novo link será enviado",
             content = @Content(schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "400",
-                    description = "Email com formato inválido ou não fornecido", content = @Content(
+                    description = "Email com formato inválido ou não fornecido",
+                    content = @Content(
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "429",
+                    description = "Rate limit excedido. Aguarde antes de tentar novamente.",
+                    content = @Content(
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     public ResponseEntity<MessageResponse> resendVerification(
             @Valid @RequestBody ResendEmailVerificationRequest request) {
