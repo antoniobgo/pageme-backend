@@ -7,7 +7,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,23 +16,20 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.atwo.paganois.dtos.UserDTO;
-import com.atwo.paganois.entities.Role;
-import com.atwo.paganois.entities.User;
-import com.atwo.paganois.exceptions.AccountDisabledException;
-import com.atwo.paganois.exceptions.UserNotFoundException;
-import com.atwo.paganois.repositories.RoleRepository;
-import com.atwo.paganois.repositories.UserRepository;
+import com.atwo.paganois.auth.exceptions.AccountDisabledException;
+import com.atwo.paganois.user.dtos.UserDTO;
+import com.atwo.paganois.user.entities.Role;
+import com.atwo.paganois.user.entities.User;
+import com.atwo.paganois.user.exceptions.UserNotFoundException;
+import com.atwo.paganois.user.repositories.RoleRepository;
+import com.atwo.paganois.user.repositories.UserRepository;
+import com.atwo.paganois.user.services.UserService;
 
 /**
  * Unit tests for UserService
  * 
- * Tests cover:
- * 1. User persistence operations
- * 2. User profile retrieval with validation
- * 3. User registration
- * 4. Password update operations
+ * Tests cover: 1. User persistence operations 2. User profile retrieval with validation 3. User
+ * registration 4. Password update operations
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService - Unit Tests")
@@ -187,8 +183,7 @@ class UserServiceTest {
 
             // Act & Assert
             assertThatThrownBy(() -> userService.getAuthenticatedUserProfile(validUser))
-                    .isInstanceOf(AccountDisabledException.class)
-                    .hasMessage("Conta desativada");
+                    .isInstanceOf(AccountDisabledException.class).hasMessage("Conta desativada");
 
             // Should not check repository (early return)
             verify(userRepository, never()).existsByUsername(any());
@@ -202,8 +197,7 @@ class UserServiceTest {
 
             // Act & Assert
             assertThatThrownBy(() -> userService.getAuthenticatedUserProfile(validUser))
-                    .isInstanceOf(UserNotFoundException.class)
-                    .hasMessage("Usuário não encontrado");
+                    .isInstanceOf(UserNotFoundException.class).hasMessage("Usuário não encontrado");
 
             verify(userRepository, times(1)).existsByUsername(USERNAME);
         }
@@ -233,7 +227,8 @@ class UserServiceTest {
 
             // Assert
             assertThat(result.getUsername()).isEqualTo(validUser.getUsername());
-            assertThat(result.getRole().getAuthority()).isEqualTo(validUser.getRole().getAuthority());
+            assertThat(result.getRole().getAuthority())
+                    .isEqualTo(validUser.getRole().getAuthority());
         }
 
     }
