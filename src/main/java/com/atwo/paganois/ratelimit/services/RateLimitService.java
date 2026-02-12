@@ -40,8 +40,6 @@ public class RateLimitService {
     public RateLimitService(RateLimitConfig config) {
         this.config = config;
 
-        // Configura caches com expiração automática
-        // Quando um IP fica inativo, o bucket é removido (economia de memória)
         this.loginBuckets = buildCache();
         this.registerBuckets = buildCache();
         this.forgotPasswordBuckets = buildCache();
@@ -54,38 +52,23 @@ public class RateLimitService {
                 .expireAfterAccess(config.getCacheExpireMinutes(), TimeUnit.MINUTES).build();
     }
 
-    /**
-     * Verifica se o request deve ser permitido para /auth/login
-     */
     public RateLimitResult tryConsumeLogin(String ip) {
         return tryConsume(ip, loginBuckets, config.getLogin(), "login");
     }
 
-    /**
-     * Verifica se o request deve ser permitido para /auth/register
-     */
     public RateLimitResult tryConsumeRegister(String ip) {
         return tryConsume(ip, registerBuckets, config.getRegister(), "register");
     }
 
-    /**
-     * Verifica se o request deve ser permitido para /auth/forgot-password
-     */
     public RateLimitResult tryConsumeForgotPassword(String ip) {
         return tryConsume(ip, forgotPasswordBuckets, config.getForgotPassword(), "forgot-password");
     }
 
-    /**
-     * Verifica se o request deve ser permitido para /auth/resend-verification
-     */
     public RateLimitResult tryConsumeResendVerification(String ip) {
         return tryConsume(ip, resendVerificationBuckets, config.getResendVerification(),
                 "resend-verification");
     }
 
-    /**
-     * Verifica se o request deve ser permitido para endpoints gerais
-     */
     public RateLimitResult tryConsumeGeneral(String ip) {
         return tryConsume(ip, generalBuckets, config.getGeneral(), "general");
     }
@@ -117,9 +100,6 @@ public class RateLimitService {
         }
     }
 
-    /**
-     * Cria um novo bucket com a configuração especificada
-     */
     private Bucket createBucket(EndpointLimit limit) {
         Bandwidth bandwidth = Bandwidth.builder().capacity(limit.getCapacity())
                 .refillGreedy(limit.getRefillTokens(), Duration.ofMinutes(limit.getRefillMinutes()))
@@ -128,9 +108,6 @@ public class RateLimitService {
         return Bucket.builder().addLimit(bandwidth).build();
     }
 
-    /**
-     * Resultado da verificação de rate limit
-     */
     public record RateLimitResult(boolean allowed, long remainingTokens, long retryAfterSeconds) {
     }
 }

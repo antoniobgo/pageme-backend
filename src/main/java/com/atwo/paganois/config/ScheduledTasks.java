@@ -15,14 +15,16 @@ public class ScheduledTasks {
     @Autowired
     private UserService userService;
 
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 40 16 * * *", zone = "America/Sao_Paulo")
     public void cleanupExpiredUnverifiedUsers() {
         int daysToExpire = 7;
 
         logger.info("Iniciando limpeza de usuários não verificados (>{} dias)", daysToExpire);
-
-        int deletedCount = userService.cleanupExpiredUnverifiedUsers(daysToExpire);
-
-        logger.info("Limpeza concluída: {} usuários não verificados removidos", deletedCount);
+        try {
+            int deletedCount = userService.cleanupExpiredUnverifiedUsers(daysToExpire);
+            logger.info("Limpeza concluída: {} usuários não verificados removidos", deletedCount);
+        } catch (Exception e) {
+            logger.error("Erro ao tentar deletar usuários não verificados", e);
+        }
     }
 }

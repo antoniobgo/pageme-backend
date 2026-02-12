@@ -21,9 +21,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Filtro que aplica rate limiting antes de qualquer processamento.
- * 
- * Executa ANTES de outros filtros. Isso significa que mesmo requests com tokens inválidos são
- * contados no rate limit, protegendo contra ataques de força bruta.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -69,9 +66,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Determina qual rate limit aplicar baseado no path
-     */
     private RateLimitResult getRateLimitResult(String path, String ip) {
         if (path.equals("/auth/login")) {
             return rateLimitService.tryConsumeLogin(ip);
@@ -91,14 +85,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return rateLimitService.tryConsumeGeneral(ip);
         }
 
-        return null; // Sem rate limit
+        return null;
     }
 
-    /**
-     * Extrai IP real do cliente, considerando proxies e load balancers
-     */
     private String getClientIP(HttpServletRequest request) {
-        // Headers comuns usados por proxies reversos
         String[] headerNames = {"X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP",
                 "WL-Proxy-Client-IP", "HTTP_X_FORWARDED_FOR", "HTTP_CLIENT_IP"};
 
@@ -106,7 +96,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             String ip = request.getHeader(header);
             if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
                 // X-Forwarded-For pode ter múltiplos IPs: "client, proxy1, proxy2"
-                // Pegamos o primeiro (cliente original)
+                // é pego o primeiro (cliente original)
                 return ip.split(",")[0].trim();
             }
         }

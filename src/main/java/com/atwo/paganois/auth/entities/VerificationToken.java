@@ -13,7 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "verfication_token")
+@Table(name = "verification_token")
 public class VerificationToken {
 
     @Id

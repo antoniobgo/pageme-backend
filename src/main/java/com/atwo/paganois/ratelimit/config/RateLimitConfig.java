@@ -17,7 +17,6 @@ public class RateLimitConfig {
     private EndpointLimit resendVerification = new EndpointLimit(3, 3, 60);
     private EndpointLimit general = new EndpointLimit(40, 40, 1);
 
-    // Cache settings
     private int cacheMaxSize = 10000;
     private int cacheExpireMinutes = 60;
 
@@ -58,8 +57,6 @@ public class RateLimitConfig {
             this.refillMinutes = refillMinutes;
         }
     }
-
-    // Getters e Setters
 
     public EndpointLimit getLogin() {
         return login;
