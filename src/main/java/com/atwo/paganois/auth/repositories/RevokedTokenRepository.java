@@ -4,14 +4,14 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class RevokedTokenRepository {
 
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    private StringRedisTemplate redisTemplate;
 
     private static final String REVOKED_TOKEN_PREFIX = "auth:token:revoked:";
     private static final String USER_TOKEN_VERSION_PREFIX = "auth:user:token_version:";
