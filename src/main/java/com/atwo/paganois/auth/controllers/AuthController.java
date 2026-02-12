@@ -97,7 +97,7 @@ public class AuthController {
             ### Quando Usar
             Use este endpoint quando o access token expirar (após 15 minutos).
 
-            ### ⚡ Resposta
+            ### Resposta
             Retorna:
             - Novo **access token** (válido por 15 min)
             - Novo **refresh token** (válido por 7 dias)
