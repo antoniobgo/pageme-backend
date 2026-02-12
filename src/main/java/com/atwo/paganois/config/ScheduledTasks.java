@@ -15,7 +15,7 @@ public class ScheduledTasks {
     @Autowired
     private UserService userService;
 
-    @Scheduled(cron = "0 40 16 * * *", zone = "America/Sao_Paulo")
+    @Scheduled(cron = "0 32 16 * * *", zone = "America/Sao_Paulo")
     public void cleanupExpiredUnverifiedUsers() {
         int daysToExpire = 7;
 
