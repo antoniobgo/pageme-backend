@@ -3,6 +3,8 @@ package com.atwo.paganois.shared.exceptions.handlers;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -25,32 +27,27 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<CustomErrorResponse> handleBadCredentials(BadCredentialsException e,
             HttpServletRequest request) {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
-                e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+        return buildErrorResponse(e, status, request);
     }
 
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<CustomErrorResponse> handleDisabled(DisabledException e,
             HttpServletRequest request) {
         HttpStatus status = HttpStatus.FORBIDDEN;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
-                e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+        return buildErrorResponse(e, status, request);
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<CustomErrorResponse> handleUserNotFound(UsernameNotFoundException e,
             HttpServletRequest request) {
         HttpStatus status = HttpStatus.NOT_FOUND;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
-                e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+        return buildErrorResponse(e, status, request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -69,45 +66,35 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CustomErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException e,
             HttpServletRequest request) {
         HttpStatus status = HttpStatus.CONFLICT;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
-                e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+        return buildErrorResponse(e, status, request);
     }
 
     @ExceptionHandler(UserNotVerifiedOrNotEnabledException.class)
     public ResponseEntity<CustomErrorResponse> handleUserNotVerifiedOrNotEnabledException(
             UserNotVerifiedOrNotEnabledException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.FORBIDDEN;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
-                e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+        return buildErrorResponse(e, status, request);
     }
 
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<CustomErrorResponse> handleInvalidTokenException(InvalidTokenException e,
             HttpServletRequest request) {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
-                e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+        return buildErrorResponse(e, status, request);
     }
 
     @ExceptionHandler(TokenNotFoundException.class)
     public ResponseEntity<CustomErrorResponse> handleTokenNotFoundException(
             TokenNotFoundException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.NOT_FOUND;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
-                e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+        return buildErrorResponse(e, status, request);
     }
 
     @ExceptionHandler(InvalidTokenTypeException.class)
     public ResponseEntity<CustomErrorResponse> handleInvalidTokenTypeException(
             InvalidTokenTypeException e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
-                e.getMessage(), request.getRequestURI());
-        return ResponseEntity.status(status).body(err);
+        return buildErrorResponse(e, status, request);
     }
 
     @ExceptionHandler(ExpiredTokenException.class)
@@ -137,13 +124,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(err);
     }
 
-    // TODO: analiser se necessario um general handler
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CustomErrorResponse> handleGeneral(Exception e,
+            HttpServletRequest request) {
+        logger.error("Erro inesperado capturado", e);
+        return buildErrorResponse(new RuntimeException("Erro interno do servidor"),
+                HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
 
-    // @ExceptionHandler(Exception.class)
-    // public ResponseEntity<CustomErrorResponse> handleGeneral(Exception e) {
-    // e.printStackTrace(); // Log do erro
-    // return ResponseEntity
-    // .status(HttpStatus.INTERNAL_SERVER_ERROR)
-    // .body(new CustomErrorResponse("An unexpected error occurred"));
-    // }
+    private ResponseEntity<CustomErrorResponse> buildErrorResponse(Exception e, HttpStatus status,
+            HttpServletRequest request) {
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
 }
