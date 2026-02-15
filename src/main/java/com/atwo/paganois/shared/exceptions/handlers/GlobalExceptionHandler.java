@@ -1,8 +1,8 @@
 package com.atwo.paganois.shared.exceptions.handlers;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -51,15 +51,16 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return ResponseEntity.badRequest().body(errors);
+    public ResponseEntity<CustomErrorResponse> handleValidationExceptions(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
+        Map<String, String> errors = ex.getBindingResult().getAllErrors().stream()
+                .collect(Collectors.toMap(error -> ((FieldError) error).getField(),
+                        error -> error.getDefaultMessage()));
+
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(),
+                HttpStatus.BAD_REQUEST.value(), errors.toString(), // ou serialize como JSON
+                request.getRequestURI());
+        return ResponseEntity.badRequest().body(err);
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
