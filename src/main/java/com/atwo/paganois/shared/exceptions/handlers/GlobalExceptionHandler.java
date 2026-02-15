@@ -1,10 +1,12 @@
 package com.atwo.paganois.shared.exceptions.handlers;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -53,14 +55,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<CustomErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
-        Map<String, String> errors = ex.getBindingResult().getAllErrors().stream()
-                .collect(Collectors.toMap(error -> ((FieldError) error).getField(),
-                        error -> error.getDefaultMessage()));
 
-        CustomErrorResponse err = new CustomErrorResponse(Instant.now(),
-                HttpStatus.BAD_REQUEST.value(), errors.toString(), // ou serialize como JSON
-                request.getRequestURI());
-        return ResponseEntity.badRequest().body(err);
+        Map<String, List<String>> errors = ex.getBindingResult().getAllErrors().stream()
+                .collect(Collectors.groupingBy(error -> ((FieldError) error).getField(),
+                        Collectors.mapping(DefaultMessageSourceResolvable::getDefaultMessage,
+                                Collectors.toList())));
+
+        CustomErrorResponse error = new CustomErrorResponse(Instant.now(),
+                HttpStatus.BAD_REQUEST.value(), errors, request.getRequestURI());
+        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
