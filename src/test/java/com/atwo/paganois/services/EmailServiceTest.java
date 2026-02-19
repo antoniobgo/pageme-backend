@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,13 +25,13 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 /**
- * Testes unitários para EmailService
+ * Unit tests for EmailService
  * 
- * Estrutura: - Testes de sendSimpleEmail (envio de email texto puro) - Testes de sendHtmlEmail
- * (envio de email HTML) - Cenários de erro/exceção
+ * Structure: - Tests for sendSimpleEmail (plain text email) - Tests for sendHtmlEmail (HTML email)
+ * - Error/exception scenarios
  */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("EmailService - Testes Unitários")
+@DisplayName("EmailService - Unit Tests")
 class EmailServiceTest {
 
     @Mock
@@ -46,138 +45,69 @@ class EmailServiceTest {
     private static final String SUBJECT = "Test Subject";
     private static final String TEXT_CONTENT = "Test email content";
     private static final String HTML_CONTENT = "<h1>Test HTML</h1>";
+    private static final String SMTP_ERROR_MSG = "SMTP server error";
+    private static final String CONNECTION_TIMEOUT_MSG = "Connection timeout";
+    private static final String INVALID_EMAIL_MSG = "Invalid email address";
 
     @BeforeEach
     void setUp() {
-        // Injeta valor do @Value("${spring.mail.username}")
         ReflectionTestUtils.setField(emailService, "fromEmail", FROM_EMAIL);
     }
 
     // ========================================================================
-    // TESTES: sendSimpleEmail()
+    // TESTS: sendSimpleEmail()
     // ========================================================================
 
     @Nested
     @DisplayName("sendSimpleEmail() - Email texto puro")
     class SendSimpleEmailTests {
 
+        private SimpleMailMessage captureSimpleMessage() {
+            ArgumentCaptor<SimpleMailMessage> captor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
+            verify(mailSender).send(captor.capture());
+            return captor.getValue();
+        }
+
         @Test
         @DisplayName("Deveria enviar email simples com sucesso quando dados são válidos")
-        void deveria_EnviarEmailSimples_QuandoDadosValidos() {
-            // Arrange - preparar
-            // (nada a preparar, mocks já configurados)
-
-            // Act - executar
-            emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
-
-            // Assert - verificar
-            verify(mailSender, times(1)).send(any(SimpleMailMessage.class));
-        }
-
-        @Test
-        @DisplayName("Deveria configurar destinatário corretamente")
-        void deveria_ConfigurarDestinatario_Corretamente() {
-            // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
-                    ArgumentCaptor.forClass(SimpleMailMessage.class);
-
+        void shouldSendSimpleEmailSuccessfully_WhenDataIsValid() {
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
 
             // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            SimpleMailMessage sentMessage = messageCaptor.getValue();
-
-            assertThat(sentMessage.getTo()).isNotNull().hasSize(1).contains(TO_EMAIL);
-        }
-
-        @Test
-        @DisplayName("Deveria configurar remetente corretamente")
-        void deveria_ConfigurarRemetente_Corretamente() {
-            // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
-                    ArgumentCaptor.forClass(SimpleMailMessage.class);
-
-            // Act
-            emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
-
-            // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            SimpleMailMessage sentMessage = messageCaptor.getValue();
-
-            assertThat(sentMessage.getFrom()).isEqualTo(FROM_EMAIL);
-        }
-
-        @Test
-        @DisplayName("Deveria configurar assunto corretamente")
-        void deveria_ConfigurarAssunto_Corretamente() {
-            // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
-                    ArgumentCaptor.forClass(SimpleMailMessage.class);
-
-            // Act
-            emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
-
-            // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            SimpleMailMessage sentMessage = messageCaptor.getValue();
-
-            assertThat(sentMessage.getSubject()).isEqualTo(SUBJECT);
-        }
-
-        @Test
-        @DisplayName("Deveria configurar corpo do email corretamente")
-        void deveria_ConfigurarCorpo_Corretamente() {
-            // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
-                    ArgumentCaptor.forClass(SimpleMailMessage.class);
-
-            // Act
-            emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
-
-            // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            SimpleMailMessage sentMessage = messageCaptor.getValue();
-
-            assertThat(sentMessage.getText()).isEqualTo(TEXT_CONTENT);
+            verify(mailSender).send(any(SimpleMailMessage.class));
         }
 
         @Test
         @DisplayName("Deveria configurar todos os campos corretamente em uma única chamada")
-        void deveria_ConfigurarTodosCampos_Corretamente() {
-            // Arrange
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
-                    ArgumentCaptor.forClass(SimpleMailMessage.class);
-
+        void shouldConfigureAllFieldsCorrectly_InSingleCall() {
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT);
 
             // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            SimpleMailMessage sentMessage = messageCaptor.getValue();
-
-            assertThat(sentMessage.getFrom()).isEqualTo(FROM_EMAIL);
-            assertThat(sentMessage.getTo()).containsExactly(TO_EMAIL);
-            assertThat(sentMessage.getSubject()).isEqualTo(SUBJECT);
-            assertThat(sentMessage.getText()).isEqualTo(TEXT_CONTENT);
+            SimpleMailMessage message = captureSimpleMessage();
+            assertThat(message.getFrom()).isEqualTo(FROM_EMAIL);
+            assertThat(message.getTo()).containsExactly(TO_EMAIL);
+            assertThat(message.getSubject()).isEqualTo(SUBJECT);
+            assertThat(message.getText()).isEqualTo(TEXT_CONTENT);
         }
 
         @Test
         @DisplayName("Deveria propagar exceção quando JavaMailSender falha")
-        void deveria_PropagarExcecao_QuandoMailSenderFalha() {
+        void shouldPropagateException_WhenMailSenderFails() {
             // Arrange
-            doThrow(new MailSendException("SMTP server error")).when(mailSender)
+            doThrow(new MailSendException(SMTP_ERROR_MSG)).when(mailSender)
                     .send(any(SimpleMailMessage.class));
 
             // Act & Assert
             assertThatThrownBy(() -> emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, TEXT_CONTENT))
-                    .isInstanceOf(MailSendException.class)
-                    .hasMessageContaining("SMTP server error");
+                    .isInstanceOf(MailSendException.class).hasMessageContaining(SMTP_ERROR_MSG);
         }
     }
 
     // ========================================================================
-    // TESTES: sendHtmlEmail()
+    // TESTS: sendHtmlEmail()
     // ========================================================================
 
     @Nested
@@ -187,40 +117,38 @@ class EmailServiceTest {
         private MimeMessage mimeMessage;
 
         @BeforeEach
-        void setUp() {
-            // Mock do MimeMessage que JavaMailSender cria
+        void setUpMimeMessage() {
             mimeMessage = mock(MimeMessage.class);
             when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
         }
 
         @Test
         @DisplayName("Deveria criar MimeMessage quando enviar email HTML")
-        void deveria_CriarMimeMessage_QuandoEnviarHtml() throws MessagingException {
+        void shouldCreateMimeMessage_WhenSendingHtmlEmail() throws MessagingException {
             // Act
             emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, HTML_CONTENT);
 
             // Assert
-            verify(mailSender, times(1)).createMimeMessage();
+            verify(mailSender).createMimeMessage();
         }
 
         @Test
         @DisplayName("Deveria enviar MimeMessage quando email HTML é válido")
-        void deveria_EnviarMimeMessage_QuandoHtmlValido() throws MessagingException {
+        void shouldSendMimeMessage_WhenHtmlEmailIsValid() throws MessagingException {
             // Act
             emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, HTML_CONTENT);
 
             // Assert
-            verify(mailSender, times(1)).send(any(MimeMessage.class));
+            verify(mailSender).send(any(MimeMessage.class));
         }
 
         @Test
         @DisplayName("Deveria lançar MessagingException quando configuração falha")
-        void deveria_LancarMessagingException_QuandoConfiguracaoFalha() throws MessagingException {
+        void shouldThrowMessagingException_WhenConfigurationFails() throws MessagingException {
             // Arrange
-            // Simula erro ao configurar MimeMessage
             MimeMessage faultyMessage = mock(MimeMessage.class);
             when(mailSender.createMimeMessage()).thenReturn(faultyMessage);
-            doThrow(new MessagingException("Invalid email address")).when(faultyMessage)
+            doThrow(new MessagingException(INVALID_EMAIL_MSG)).when(faultyMessage)
                     .setFrom(any(jakarta.mail.internet.InternetAddress.class));
 
             // Act & Assert
@@ -230,96 +158,101 @@ class EmailServiceTest {
 
         @Test
         @DisplayName("Deveria propagar exceção quando envio de MimeMessage falha")
-        void deveria_PropagarExcecao_QuandoEnvioMimeFalha() {
+        void shouldPropagateException_WhenMimeMessageSendFails() {
             // Arrange
-            doThrow(new MailSendException("Connection timeout")).when(mailSender)
+            doThrow(new MailSendException(CONNECTION_TIMEOUT_MSG)).when(mailSender)
                     .send(any(MimeMessage.class));
 
             // Act & Assert
             assertThatThrownBy(() -> emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, HTML_CONTENT))
                     .isInstanceOf(MailSendException.class)
-                    .hasMessageContaining("Connection timeout");
+                    .hasMessageContaining(CONNECTION_TIMEOUT_MSG);
         }
 
         @Test
         @DisplayName("Deveria não lançar exceção quando email HTML é enviado com sucesso")
-        void deveria_NaoLancarExcecao_QuandoHtmlEnviadoComSucesso() {
-            // Act & Assert - não deve lançar exceção
+        void shouldNotThrowException_WhenHtmlEmailSentSuccessfully() {
+            // Act & Assert
             org.junit.jupiter.api.Assertions.assertDoesNotThrow(
                     () -> emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, HTML_CONTENT));
         }
     }
 
     // ========================================================================
-    // TESTES: Cenários de Borda e Validação
+    // TESTS: Edge cases and validation
     // ========================================================================
 
     @Nested
     @DisplayName("Cenários de borda e validação")
-    class EdgeCasesTests {
+    class EdgeCasesAndValidationTests {
 
         @Test
-        @DisplayName("Deveria enviar email com assunto vazio")
-        void deveria_EnviarEmail_ComAssuntoVazio() {
+        @DisplayName("Deveria aceitar email com múltiplos caracteres especiais no assunto")
+        void shouldAcceptEmailWithSpecialCharactersInSubject() {
             // Arrange
-            String emptySubject = "";
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
-                    ArgumentCaptor.forClass(SimpleMailMessage.class);
-
-            // Act
-            emailService.sendSimpleEmail(TO_EMAIL, emptySubject, TEXT_CONTENT);
-
-            // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            assertThat(messageCaptor.getValue().getSubject()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Deveria enviar email com conteúdo vazio")
-        void deveria_EnviarEmail_ComConteudoVazio() {
-            // Arrange
-            String emptyContent = "";
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
-                    ArgumentCaptor.forClass(SimpleMailMessage.class);
-
-            // Act
-            emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, emptyContent);
-
-            // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            assertThat(messageCaptor.getValue().getText()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Deveria enviar email com conteúdo muito longo")
-        void deveria_EnviarEmail_ComConteudoLongo() {
-            // Arrange
-            String longContent = "A".repeat(10000);
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
-                    ArgumentCaptor.forClass(SimpleMailMessage.class);
-
-            // Act
-            emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, longContent);
-
-            // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            assertThat(messageCaptor.getValue().getText()).hasSize(10000);
-        }
-
-        @Test
-        @DisplayName("Deveria enviar email com caracteres especiais no assunto")
-        void deveria_EnviarEmail_ComCaracteresEspeciais() {
-            // Arrange
-            String specialSubject = "Olá! 你好 🎉 <test>";
-            ArgumentCaptor<SimpleMailMessage> messageCaptor =
+            String specialSubject = "Test: 你好 & Привет! #123 @user";
+            ArgumentCaptor<SimpleMailMessage> captor =
                     ArgumentCaptor.forClass(SimpleMailMessage.class);
 
             // Act
             emailService.sendSimpleEmail(TO_EMAIL, specialSubject, TEXT_CONTENT);
 
             // Assert
-            verify(mailSender).send(messageCaptor.capture());
-            assertThat(messageCaptor.getValue().getSubject()).isEqualTo(specialSubject);
+            verify(mailSender).send(captor.capture());
+            assertThat(captor.getValue().getSubject()).isEqualTo(specialSubject);
+        }
+
+        @Test
+        @DisplayName("Deveria aceitar conteúdo vazio no corpo do email")
+        void shouldAcceptEmptyContentInEmailBody() {
+            // Arrange
+            String emptyContent = "";
+            ArgumentCaptor<SimpleMailMessage> captor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+            // Act
+            emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, emptyContent);
+
+            // Assert
+            verify(mailSender).send(captor.capture());
+            assertThat(captor.getValue().getText()).isEqualTo(emptyContent);
+        }
+
+        @Test
+        @DisplayName("Deveria aceitar conteúdo HTML complexo com múltiplas tags")
+        void shouldAcceptComplexHtmlContentWithMultipleTags() throws MessagingException {
+            // Arrange
+            String complexHtml = """
+                    <html>
+                        <body>
+                            <h1>Title</h1>
+                            <p>Paragraph with <strong>bold</strong> and <em>italic</em></p>
+                            <ul><li>Item 1</li><li>Item 2</li></ul>
+                        </body>
+                    </html>
+                    """;
+            MimeMessage mimeMessage = mock(MimeMessage.class);
+            when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+            // Act & Assert
+            org.junit.jupiter.api.Assertions.assertDoesNotThrow(
+                    () -> emailService.sendHtmlEmail(TO_EMAIL, SUBJECT, complexHtml));
+        }
+
+        @Test
+        @DisplayName("Deveria aceitar conteúdo com caracteres unicode")
+        void shouldAcceptContentWithUnicodeCharacters() {
+            // Arrange
+            String unicodeContent = "Hello 世界 🌍 Привет مرحبا";
+            ArgumentCaptor<SimpleMailMessage> captor =
+                    ArgumentCaptor.forClass(SimpleMailMessage.class);
+
+            // Act
+            emailService.sendSimpleEmail(TO_EMAIL, SUBJECT, unicodeContent);
+
+            // Assert
+            verify(mailSender).send(captor.capture());
+            assertThat(captor.getValue().getText()).isEqualTo(unicodeContent);
         }
     }
 }

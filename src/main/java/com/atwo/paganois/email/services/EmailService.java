@@ -17,7 +17,7 @@ public class EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
-    @Autowired(required = false)
+    @Autowired
     private JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
@@ -25,6 +25,10 @@ public class EmailService {
 
     @Async("emailExecutor")
     public void sendSimpleEmail(String to, String subject, String text) {
+        if (mailSender == null) {
+            logger.warn("JavaMailSender não configurado. Email não enviado");
+            return;
+        }
         logger.debug("Preparando email para enviar");
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
@@ -38,6 +42,10 @@ public class EmailService {
     @Async("emailExecutor")
     public void sendHtmlEmail(String to, String subject, String htmlContent)
             throws MessagingException {
+        if (mailSender == null) {
+            logger.warn("JavaMailSender não configurado. Email não enviado");
+            return;
+        }
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
