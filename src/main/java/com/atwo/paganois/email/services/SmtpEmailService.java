@@ -3,6 +3,7 @@ package com.atwo.paganois.email.services;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -12,6 +13,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 @Service
+@Profile({"dev", "test", "default"})
 public class SmtpEmailService implements EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(SmtpEmailService.class);
