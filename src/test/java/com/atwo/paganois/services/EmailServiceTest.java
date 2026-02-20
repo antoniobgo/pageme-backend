@@ -20,7 +20,7 @@ import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
-import com.atwo.paganois.email.services.EmailService;
+import com.atwo.paganois.email.services.SmtpEmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
@@ -38,7 +38,7 @@ class EmailServiceTest {
     private JavaMailSender mailSender;
 
     @InjectMocks
-    private EmailService emailService;
+    private SmtpEmailService emailService;
 
     private static final String FROM_EMAIL = "noreply@paganois.com";
     private static final String TO_EMAIL = "user@example.com";
