@@ -4,7 +4,6 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.mail.MailSendException;
 import org.springframework.scheduling.annotation.Async;
@@ -18,22 +17,19 @@ import com.sendgrid.helpers.mail.objects.Content;
 import com.sendgrid.helpers.mail.objects.Email;
 
 @Service
-@Primary
 @Profile("prod")
 public class SendGridEmailService implements EmailService {
 
-    private static final Logger logger = LoggerFactory.getLogger(SmtpEmailService.class);
-
-    @Value("${sendgrid.api.key}")
-    private String apiKey;
-
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    private static final Logger logger = LoggerFactory.getLogger(SendGridEmailService.class);
 
     private final SendGrid sendGrid;
 
-    public SendGridEmailService() {
+    private final String fromEmail;
+
+    public SendGridEmailService(@Value("${sendgrid.api.key}") String apiKey,
+            @Value("${spring.mail.username}") String fromEmail) {
         sendGrid = new SendGrid(apiKey);
+        this.fromEmail = fromEmail;
     }
 
     @Override

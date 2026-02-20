@@ -2,7 +2,6 @@ package com.atwo.paganois.email.services;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -17,11 +16,14 @@ public class SmtpEmailService implements EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(SmtpEmailService.class);
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
+    private final String fromEmail;
 
-    @Value("${spring.mail.username}")
-    protected String fromEmail;
+    public SmtpEmailService(JavaMailSender mailSender,
+            @Value("${spring.mail.username}") String fromEmail) {
+        this.mailSender = mailSender;
+        this.fromEmail = fromEmail;
+    }
 
     @Async("emailExecutor")
     public void sendSimpleEmail(String to, String subject, String text) {

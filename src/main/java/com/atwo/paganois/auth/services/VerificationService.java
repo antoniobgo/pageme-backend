@@ -13,7 +13,7 @@ import com.atwo.paganois.auth.exceptions.ExpiredTokenException;
 import com.atwo.paganois.auth.exceptions.InvalidTokenTypeException;
 import com.atwo.paganois.auth.exceptions.TokenNotFoundException;
 import com.atwo.paganois.auth.repositories.VerificationTokenRepository;
-import com.atwo.paganois.email.services.SmtpEmailService;
+import com.atwo.paganois.email.services.EmailService;
 import com.atwo.paganois.user.entities.User;
 import jakarta.transaction.Transactional;
 
@@ -24,7 +24,7 @@ public class VerificationService {
     private VerificationTokenRepository tokenRepository;
 
     @Autowired
-    private SmtpEmailService emailService;
+    private EmailService emailService;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
