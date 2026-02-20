@@ -64,6 +64,10 @@ public class VerificationService {
 
         String confirmationUrl = baseUrl + "/auth/verify-email?token=" + token;
 
+        logger.info("Token gerado: {}", token);
+        logger.info("Base URL: {}", baseUrl);
+        logger.info("URL final: {}", confirmationUrl);
+
         emailService.sendSimpleEmail(user.getEmail(), "Confirme seu email - Paganois",
                 "Por favor, confirme seu email clicando no link: \n" + confirmationUrl);
     }
