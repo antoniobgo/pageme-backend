@@ -1,4 +1,4 @@
-package com.atwo.paganois.services;
+package com.atwo.paganois.user.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,7 +32,6 @@ import com.atwo.paganois.user.entities.User;
 import com.atwo.paganois.user.exceptions.UserNotFoundException;
 import com.atwo.paganois.user.repositories.RoleRepository;
 import com.atwo.paganois.user.repositories.UserRepository;
-import com.atwo.paganois.user.services.UserService;
 
 /**
  * Unit tests for UserService

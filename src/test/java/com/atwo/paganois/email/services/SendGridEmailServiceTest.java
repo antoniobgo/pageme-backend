@@ -1,4 +1,4 @@
-package com.atwo.paganois.services;
+package com.atwo.paganois.email.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.MailSendException;
 import org.springframework.test.util.ReflectionTestUtils;
-import com.atwo.paganois.email.services.SendGridEmailService;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
