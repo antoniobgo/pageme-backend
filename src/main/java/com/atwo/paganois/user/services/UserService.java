@@ -76,7 +76,7 @@ public class UserService {
         String encodedOldPassword = passwordEncoder.encode(oldPassword);
         String encodedNewPassword = passwordEncoder.encode(newPassword);
 
-        if (user.getPassword().equals(encodedOldPassword))
+        if (!user.getPassword().equals(encodedOldPassword))
             throw new WrongPasswordException("Senha atual incorreta");
 
         user.setPassword(encodedNewPassword);
