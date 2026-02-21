@@ -32,7 +32,7 @@ import jakarta.mail.internet.MimeMessage;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("EmailService - Unit Tests")
-class EmailServiceTest {
+class SmtpEmailServiceTest {
 
     @Mock
     private JavaMailSender mailSender;
