@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,7 +26,6 @@ public class JwtUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
-    @Autowired
     private TokenRevocationService tokenRevocationService;
 
     @Value("${jwt.secret}")
@@ -38,6 +36,10 @@ public class JwtUtil {
 
     @Value("${jwt.refresh-expiration}")
     private Long refreshExpiration;
+
+    public JwtUtil(TokenRevocationService tokenRevocationService) {
+        this.tokenRevocationService = tokenRevocationService;
+    }
 
     public String generateToken(UserDetails userDetails) {
         return buildToken(userDetails, expiration);
