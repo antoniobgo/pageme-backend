@@ -2,7 +2,6 @@ package com.atwo.paganois.user.services;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,17 +24,18 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
     private UserRepository userRepository;
 
-    @Autowired
     private RoleRepository roleRepository;
 
-    @Autowired
     private VerificationService verificationService;
 
-    UserService(PasswordEncoder passwordEncoder) {
+    UserService(PasswordEncoder passwordEncoder, UserRepository userRepository,
+            RoleRepository roleRepository, VerificationService verificationService) {
         this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.verificationService = verificationService;
     }
 
     @Transactional

@@ -1,562 +1,619 @@
-// package com.atwo.paganois.services;
-
-// import static org.assertj.core.api.Assertions.assertThat;
-// import static org.assertj.core.api.Assertions.assertThatThrownBy;
-// import static org.mockito.ArgumentMatchers.any;
-// import static org.mockito.Mockito.never;
-// import static org.mockito.Mockito.times;
-// import static org.mockito.Mockito.verify;
-// import static org.mockito.Mockito.when;
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.DisplayName;
-// import org.junit.jupiter.api.Nested;
-// import org.junit.jupiter.api.Test;
-// import org.junit.jupiter.api.extension.ExtendWith;
-// import org.mockito.ArgumentCaptor;
-// import org.mockito.InjectMocks;
-// import org.mockito.Mock;
-// import org.mockito.junit.jupiter.MockitoExtension;
-// import com.atwo.paganois.auth.exceptions.AccountDisabledException;
-// import com.atwo.paganois.user.dtos.UserDTO;
-// import com.atwo.paganois.user.entities.Role;
-// import com.atwo.paganois.user.entities.User;
-// import com.atwo.paganois.user.exceptions.UserNotFoundException;
-// import com.atwo.paganois.user.repositories.RoleRepository;
-// import com.atwo.paganois.user.repositories.UserRepository;
-// import com.atwo.paganois.user.services.UserService;
-
-// /**
-// * Unit tests for UserService
-// *
-// * Tests cover: 1. User persistence operations 2. User profile retrieval with validation 3. User
-// * registration 4. Password update operations
-// */
-// @ExtendWith(MockitoExtension.class)
-// @DisplayName("UserService - Unit Tests")
-// class UserServiceTest {
-
-// @Mock
-// private UserRepository userRepository;
-
-// @Mock
-// private RoleRepository roleRepository;
-
-// @InjectMocks
-// private UserService userService;
-
-// private User validUser;
-// private Role userRole;
-
-// private static final String USERNAME = "testuser";
-// private static final String EMAIL = "test@example.com";
-// private static final String PASSWORD = "password123";
-// private static final String ENCODED_PASSWORD = "encodedPassword123";
-// private static final String NEW_ENCODED_PASSWORD = "newEncodedPassword456";
-
-// @BeforeEach
-// void setUp() {
-// // Setup Role
-// userRole = new Role();
-// userRole.setId(1L);
-// userRole.setAuthority("ROLE_USER");
-
-// // Setup valid User
-// validUser = new User();
-// validUser.setId(1L);
-// validUser.setUsername(USERNAME);
-// validUser.setEmail(EMAIL);
-// validUser.setPassword(ENCODED_PASSWORD);
-// validUser.setRole(userRole);
-// validUser.setEnabled(true);
-// validUser.setEmailVerified(true);
-// }
-
-// // ========================================================================
-// // TESTS: save()
-// // ========================================================================
-
-// @Nested
-// @DisplayName("save() - Save user to repository")
-// class SaveTests {
-
-// @Test
-// @DisplayName("Should save user and return saved user")
-// void shouldSaveUser_AndReturnSavedUser() {
-// // Arrange
-// when(userRepository.save(validUser)).thenReturn(validUser);
-
-// // Act
-// User result = userService.save(validUser);
-
-// // Assert
-// assertThat(result).isNotNull();
-// assertThat(result).isEqualTo(validUser);
-// verify(userRepository, times(1)).save(validUser);
-// }
-
-// @Test
-// @DisplayName("Should delegate save operation to repository")
-// void shouldDelegateSaveOperation_ToRepository() {
-// // Arrange
-// when(userRepository.save(validUser)).thenReturn(validUser);
-
-// // Act
-// userService.save(validUser);
-
-// // Assert
-// verify(userRepository, times(1)).save(validUser);
-// }
-
-// @Test
-// @DisplayName("Should return user with ID after saving new user")
-// void shouldReturnUserWithId_AfterSavingNewUser() {
-// // Arrange
-// User newUser = new User();
-// newUser.setUsername("newuser");
-// newUser.setEmail("new@example.com");
-
-// User savedUser = new User();
-// savedUser.setId(2L);
-// savedUser.setUsername("newuser");
-// savedUser.setEmail("new@example.com");
-
-// when(userRepository.save(newUser)).thenReturn(savedUser);
-
-// // Act
-// User result = userService.save(newUser);
-
-// // Assert
-// assertThat(result.getId()).isNotNull();
-// assertThat(result.getId()).isEqualTo(2L);
-// verify(userRepository, times(1)).save(newUser);
-// }
-
-// @Test
-// @DisplayName("Should save user with all properties")
-// void shouldSaveUser_WithAllProperties() {
-// // Arrange
-// ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-
-// // Act
-// userService.save(validUser);
-
-// // Assert
-// verify(userRepository).save(userCaptor.capture());
-// User capturedUser = userCaptor.getValue();
-
-// assertThat(capturedUser.getUsername()).isEqualTo(USERNAME);
-// assertThat(capturedUser.getEmail()).isEqualTo(EMAIL);
-// assertThat(capturedUser.getPassword()).isEqualTo(ENCODED_PASSWORD);
-// assertThat(capturedUser.getRole()).isEqualTo(userRole);
-// }
-// }
-
-// // ========================================================================
-// // TESTS: getAuthenticatedUserProfile()
-// // ========================================================================
-
-// @Nested
-// @DisplayName("getAuthenticatedUserProfile() - Get profile of authenticated user")
-// class GetAuthenticatedUserProfileTests {
-
-// @Test
-// @DisplayName("Should return UserDTO when user is enabled and exists")
-// void shouldReturnUserDTO_WhenUserEnabledAndExists() {
-// // Arrange
-// when(userRepository.existsByUsername(USERNAME)).thenReturn(true);
-
-// // Act
-// UserDTO result = userService.getAuthenticatedUserProfile(validUser);
-
-// // Assert
-// assertThat(result).isNotNull();
-// assertThat(result.getUsername()).isEqualTo(USERNAME);
-// verify(userRepository, times(1)).existsByUsername(USERNAME);
-// }
-
-// @Test
-// @DisplayName("Should throw AccountDisabledException when user is disabled")
-// void shouldThrowAccountDisabledException_WhenUserDisabled() {
-// // Arrange
-// validUser.setEnabled(false);
-
-// // Act & Assert
-// assertThatThrownBy(() -> userService.getAuthenticatedUserProfile(validUser))
-// .isInstanceOf(AccountDisabledException.class).hasMessage("Conta desativada");
-
-// // Should not check repository (early return)
-// verify(userRepository, never()).existsByUsername(any());
-// }
-
-// @Test
-// @DisplayName("Should throw UserNotFoundException when user does not exist in repository")
-// void shouldThrowUserNotFoundException_WhenUserNotInRepository() {
-// // Arrange
-// when(userRepository.existsByUsername(USERNAME)).thenReturn(false);
-
-// // Act & Assert
-// assertThatThrownBy(() -> userService.getAuthenticatedUserProfile(validUser))
-// .isInstanceOf(UserNotFoundException.class).hasMessage("Usuário não encontrado");
-
-// verify(userRepository, times(1)).existsByUsername(USERNAME);
-// }
-
-// @Test
-// @DisplayName("Should check if user is enabled before checking existence")
-// void shouldCheckEnabled_BeforeCheckingExistence() {
-// // Arrange
-// validUser.setEnabled(false);
-
-// // Act & Assert
-// assertThatThrownBy(() -> userService.getAuthenticatedUserProfile(validUser))
-// .isInstanceOf(AccountDisabledException.class);
-
-// // Verify repository was NOT called (failed before)
-// verify(userRepository, never()).existsByUsername(any());
-// }
-
-// @Test
-// @DisplayName("Should create UserDTO with correct user details")
-// void shouldCreateUserDTO_WithCorrectDetails() {
-// // Arrange
-// when(userRepository.existsByUsername(USERNAME)).thenReturn(true);
-
-// // Act
-// UserDTO result = userService.getAuthenticatedUserProfile(validUser);
-
-// // Assert
-// assertThat(result.getUsername()).isEqualTo(validUser.getUsername());
-// assertThat(result.getRole().getAuthority())
-// .isEqualTo(validUser.getRole().getAuthority());
-// }
-
-// }
-
-// // ========================================================================
-// // TESTS: registerUser()
-// // ========================================================================
-
-// @Nested
-// @DisplayName("registerUser() - Register new user")
-// class RegisterUserTests {
-
-// @Test
-// @DisplayName("Should create user with provided details")
-// void shouldCreateUser_WithProvidedDetails() {
-// // Arrange
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-
-// ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-
-// // Act
-// userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
-
-// // Assert
-// verify(userRepository).save(userCaptor.capture());
-// User capturedUser = userCaptor.getValue();
-
-// assertThat(capturedUser.getUsername()).isEqualTo(USERNAME);
-// assertThat(capturedUser.getPassword()).isEqualTo(ENCODED_PASSWORD);
-// assertThat(capturedUser.getEmail()).isEqualTo(EMAIL);
-// }
-
-// @Test
-// @DisplayName("Should assign ROLE_USER to new user")
-// void shouldAssignRoleUser_ToNewUser() {
-// // Arrange
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-
-// ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-
-// // Act
-// userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
-
-// // Assert
-// verify(roleRepository, times(1)).findByAuthority("ROLE_USER");
-// verify(userRepository).save(userCaptor.capture());
-// assertThat(userCaptor.getValue().getRole()).isEqualTo(userRole);
-// }
-
-// @Test
-// @DisplayName("Should save user and return saved user")
-// void shouldSaveUser_AndReturnSavedUser() {
-// // Arrange
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-
-// // Act
-// User result = userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
-
-// // Assert
-// assertThat(result).isNotNull();
-// assertThat(result).isEqualTo(validUser);
-// verify(userRepository, times(1)).save(any(User.class));
-// }
-
-// @Test
-// @DisplayName("Should accept already encoded password")
-// void shouldAcceptAlreadyEncodedPassword() {
-// // Arrange
-// String encodedPwd = "$2a$10$abcdefghijklmnopqrstuvwxyz";
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-
-// ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-
-// // Act
-// userService.registerUser(USERNAME, encodedPwd, EMAIL);
-
-// // Assert
-// verify(userRepository).save(userCaptor.capture());
-// assertThat(userCaptor.getValue().getPassword()).isEqualTo(encodedPwd);
-// }
-
-// @Test
-// @DisplayName("Should set all user properties correctly")
-// void shouldSetAllUserProperties_Correctly() {
-// // Arrange
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-
-// ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-
-// // Act
-// userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
-
-// // Assert
-// verify(userRepository).save(userCaptor.capture());
-// User capturedUser = userCaptor.getValue();
-
-// assertThat(capturedUser.getUsername()).isEqualTo(USERNAME);
-// assertThat(capturedUser.getPassword()).isEqualTo(ENCODED_PASSWORD);
-// assertThat(capturedUser.getEmail()).isEqualTo(EMAIL);
-// assertThat(capturedUser.getRole()).isEqualTo(userRole);
-// }
-
-// @Test
-// @DisplayName("Should fetch ROLE_USER from repository")
-// void shouldFetchRoleUser_FromRepository() {
-// // Arrange
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-
-// ArgumentCaptor<String> roleNameCaptor = ArgumentCaptor.forClass(String.class);
-
-// // Act
-// userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
-
-// // Assert
-// verify(roleRepository).findByAuthority(roleNameCaptor.capture());
-// assertThat(roleNameCaptor.getValue()).isEqualTo("ROLE_USER");
-// }
-// }
-
-// // ========================================================================
-// // TESTS: setNewPassword()
-// // ========================================================================
-
-// @Nested
-// @DisplayName("setNewPassword() - Update user password")
-// class SetNewPasswordTests {
-
-// @Test
-// @DisplayName("Should update user password with encoded password")
-// void shouldUpdateUserPassword_WithEncodedPassword() {
-// // Arrange
-// String oldPassword = validUser.getPassword();
-// when(userRepository.save(validUser)).thenReturn(validUser);
-
-// // Act
-// userService.setNewPassword(validUser, NEW_ENCODED_PASSWORD);
-
-// // Assert
-// assertThat(validUser.getPassword()).isEqualTo(NEW_ENCODED_PASSWORD);
-// assertThat(validUser.getPassword()).isNotEqualTo(oldPassword);
-// }
-
-// @Test
-// @DisplayName("Should save user after updating password")
-// void shouldSaveUser_AfterUpdatingPassword() {
-// // Arrange
-// when(userRepository.save(validUser)).thenReturn(validUser);
-
-// // Act
-// userService.setNewPassword(validUser, NEW_ENCODED_PASSWORD);
-
-// // Assert
-// verify(userRepository, times(1)).save(validUser);
-// }
-
-// @Test
-// @DisplayName("Should set password before saving user")
-// void shouldSetPassword_BeforeSavingUser() {
-// // Arrange
-// ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-
-// // Act
-// userService.setNewPassword(validUser, NEW_ENCODED_PASSWORD);
-
-// // Assert
-// verify(userRepository).save(userCaptor.capture());
-// assertThat(userCaptor.getValue().getPassword()).isEqualTo(NEW_ENCODED_PASSWORD);
-// }
-
-// @Test
-// @DisplayName("Should accept already encoded new password")
-// void shouldAcceptAlreadyEncodedNewPassword() {
-// // Arrange
-// String bcryptPassword = "$2a$10$newEncodedPasswordHash";
-// when(userRepository.save(validUser)).thenReturn(validUser);
-
-// ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-
-// // Act
-// userService.setNewPassword(validUser, bcryptPassword);
-
-// // Assert
-// verify(userRepository).save(userCaptor.capture());
-// assertThat(userCaptor.getValue().getPassword()).isEqualTo(bcryptPassword);
-// }
-
-// @Test
-// @DisplayName("Should modify the same user instance")
-// void shouldModifySameUserInstance() {
-// // Arrange
-// when(userRepository.save(validUser)).thenReturn(validUser);
-
-// // Act
-// userService.setNewPassword(validUser, NEW_ENCODED_PASSWORD);
-
-// // Assert
-// verify(userRepository).save(validUser); // Same instance
-// assertThat(validUser.getPassword()).isEqualTo(NEW_ENCODED_PASSWORD);
-// }
-
-// @Test
-// @DisplayName("Should update password for any user")
-// void shouldUpdatePassword_ForAnyUser() {
-// // Arrange
-// User anotherUser = new User();
-// anotherUser.setId(2L);
-// anotherUser.setUsername("anotheruser");
-// anotherUser.setPassword("oldPassword");
-
-// when(userRepository.save(anotherUser)).thenReturn(anotherUser);
-
-// // Act
-// userService.setNewPassword(anotherUser, NEW_ENCODED_PASSWORD);
-
-// // Assert
-// assertThat(anotherUser.getPassword()).isEqualTo(NEW_ENCODED_PASSWORD);
-// verify(userRepository, times(1)).save(anotherUser);
-// }
-// }
-
-// // ========================================================================
-// // TESTS: Integration scenarios
-// // ========================================================================
-
-// @Nested
-// @DisplayName("Integration scenarios")
-// class IntegrationTests {
-
-// @Test
-// @DisplayName("Should complete full user registration and profile retrieval flow")
-// void shouldCompleteFullRegistrationAndProfileFlow() {
-// // Arrange
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-// when(userRepository.existsByUsername(USERNAME)).thenReturn(true);
-
-// // Act 1: Register user
-// User registeredUser = userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
-
-// // Act 2: Get profile
-// UserDTO profile = userService.getAuthenticatedUserProfile(registeredUser);
-
-// // Assert
-// assertThat(registeredUser).isNotNull();
-// assertThat(profile).isNotNull();
-// assertThat(profile.getUsername()).isEqualTo(registeredUser.getUsername());
-
-// verify(roleRepository).findByAuthority("ROLE_USER");
-// verify(userRepository).save(any(User.class));
-// verify(userRepository).existsByUsername(USERNAME);
-// }
-
-// @Test
-// @DisplayName("Should complete password change flow")
-// void shouldCompletePasswordChangeFlow() {
-// // Arrange
-// when(userRepository.save(validUser)).thenReturn(validUser);
-// String originalPassword = validUser.getPassword();
-
-// // Act
-// userService.setNewPassword(validUser, NEW_ENCODED_PASSWORD);
-
-// // Assert
-// assertThat(validUser.getPassword()).isNotEqualTo(originalPassword);
-// assertThat(validUser.getPassword()).isEqualTo(NEW_ENCODED_PASSWORD);
-// verify(userRepository).save(validUser);
-// }
-
-// @Test
-// @DisplayName("Should handle multiple password changes")
-// void shouldHandleMultiplePasswordChanges() {
-// // Arrange
-// when(userRepository.save(validUser)).thenReturn(validUser);
-// String firstNewPassword = "firstNewPassword";
-// String secondNewPassword = "secondNewPassword";
-
-// // Act
-// userService.setNewPassword(validUser, firstNewPassword);
-// userService.setNewPassword(validUser, secondNewPassword);
-
-// // Assert
-// assertThat(validUser.getPassword()).isEqualTo(secondNewPassword);
-// verify(userRepository, times(2)).save(validUser);
-// }
-
-// @Test
-// @DisplayName("Should not allow profile access for disabled user")
-// void shouldNotAllowProfileAccess_ForDisabledUser() {
-// // Arrange
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-
-// User disabledUser = new User();
-// disabledUser.setUsername(USERNAME);
-// disabledUser.setEnabled(false);
-
-// when(userRepository.save(any(User.class))).thenReturn(disabledUser);
-
-// // Act
-// User registeredUser = userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
-
-// // Assert - should throw when trying to get profile
-// assertThatThrownBy(() -> userService.getAuthenticatedUserProfile(registeredUser))
-// .isInstanceOf(AccountDisabledException.class);
-// }
-
-// @Test
-// @DisplayName("Should register user and immediately allow profile access")
-// void shouldRegisterUser_AndAllowProfileAccess() {
-// // Arrange
-// when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
-// when(userRepository.save(any(User.class))).thenReturn(validUser);
-// when(userRepository.existsByUsername(USERNAME)).thenReturn(true);
-
-// // Act
-// User newUser = userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
-// UserDTO profile = userService.getAuthenticatedUserProfile(newUser);
-
-// // Assert
-// assertThat(newUser).isNotNull();
-// assertThat(profile).isNotNull();
-// assertThat(profile.getUsername()).isEqualTo(USERNAME);
-// }
-// }
-// }
+package com.atwo.paganois.services;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.atwo.paganois.auth.entities.TokenType;
+import com.atwo.paganois.auth.entities.VerificationToken;
+import com.atwo.paganois.auth.exceptions.AccountDisabledException;
+import com.atwo.paganois.auth.exceptions.EmailAlreadyTakenException;
+import com.atwo.paganois.auth.exceptions.LoggedUserAndChangeEmailTokenMismatchException;
+import com.atwo.paganois.auth.exceptions.WrongPasswordException;
+import com.atwo.paganois.auth.services.VerificationService;
+import com.atwo.paganois.user.dtos.UserDTO;
+import com.atwo.paganois.user.entities.Role;
+import com.atwo.paganois.user.entities.User;
+import com.atwo.paganois.user.exceptions.UserNotFoundException;
+import com.atwo.paganois.user.repositories.RoleRepository;
+import com.atwo.paganois.user.repositories.UserRepository;
+import com.atwo.paganois.user.services.UserService;
+
+/**
+ * Unit tests for UserService
+ * 
+ * Structure: - save() - User persistence - getAuthenticatedUserProfile() - Profile retrieval with
+ * validation - registerUser() - User registration - setNewPassword() - Password update (no old
+ * password check) - updatePassword() - Password update (with old password validation) -
+ * requestEmailChange() - Email change initiation - confirmEmailChange() - Email change confirmation
+ * - validateNewEmail() - Email validation logic - loadByUsername() - User lookup - Other utility
+ * methods
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("UserService - Unit Tests")
+class UserServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private VerificationService verificationService;
+
+    @InjectMocks
+    private UserService userService;
+
+    private User validUser;
+    private Role userRole;
+
+    private static final String USERNAME = "testuser";
+    private static final String EMAIL = "test@example.com";
+    private static final String NEW_EMAIL = "new@example.com";
+    private static final String PASSWORD = "password123";
+    private static final String ENCODED_PASSWORD = "$2a$10$encodedPassword";
+    private static final String NEW_PASSWORD = "newPassword456";
+    private static final String ENCODED_NEW_PASSWORD = "$2a$10$encodedNewPassword";
+    private static final String TOKEN = "test-token-uuid";
+
+    @BeforeEach
+    void setUp() {
+        userRole = new Role();
+        userRole.setId(1L);
+        userRole.setAuthority("ROLE_USER");
+
+        validUser = new User();
+        validUser.setId(1L);
+        validUser.setUsername(USERNAME);
+        validUser.setEmail(EMAIL);
+        validUser.setPassword(ENCODED_PASSWORD);
+        validUser.setRole(userRole);
+        validUser.setEnabled(true);
+        validUser.setEmailVerified(true);
+    }
+
+    // ========================================================================
+    // TESTS: save()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("save() - Salvar usuário no repositório")
+    class SaveTests {
+
+        @Test
+        @DisplayName("Deveria salvar usuário e retornar usuário salvo")
+        void shouldSaveUser_AndReturnSavedUser() {
+            // Arrange
+            when(userRepository.save(validUser)).thenReturn(validUser);
+
+            // Act
+            User result = userService.save(validUser);
+
+            // Assert
+            assertThat(result).isNotNull().isEqualTo(validUser);
+            verify(userRepository).save(validUser);
+        }
+
+        @Test
+        @DisplayName("Deveria delegar operação de save para o repositório")
+        void shouldDelegateSave_ToRepository() {
+            // Arrange
+            when(userRepository.save(validUser)).thenReturn(validUser);
+
+            // Act
+            userService.save(validUser);
+
+            // Assert
+            verify(userRepository).save(validUser);
+        }
+    }
+
+    // ========================================================================
+    // TESTS: getAuthenticatedUserProfile()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("getAuthenticatedUserProfile() - Obter perfil do usuário autenticado")
+    class GetAuthenticatedUserProfileTests {
+
+        @Test
+        @DisplayName("Deveria retornar UserDTO quando usuário está habilitado e existe")
+        void shouldReturnUserDTO_WhenUserIsEnabledAndExists() {
+            // Arrange
+            when(userRepository.existsByUsername(USERNAME)).thenReturn(true);
+
+            // Act
+            UserDTO result = userService.getAuthenticatedUserProfile(validUser);
+
+            // Assert
+            assertThat(result).isNotNull();
+            assertThat(result.getUsername()).isEqualTo(USERNAME);
+            assertThat(result.getEmail()).isEqualTo(EMAIL);
+            verify(userRepository).existsByUsername(USERNAME);
+        }
+
+        @Test
+        @DisplayName("Deveria lançar AccountDisabledException quando usuário está desabilitado")
+        void shouldThrowAccountDisabledException_WhenUserIsDisabled() {
+            // Arrange
+            validUser.setEnabled(false);
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.getAuthenticatedUserProfile(validUser))
+                    .isInstanceOf(AccountDisabledException.class).hasMessage("Conta desativada");
+
+            verify(userRepository, never()).existsByUsername(any());
+        }
+
+        @Test
+        @DisplayName("Deveria lançar UserNotFoundException quando usuário não existe no repositório")
+        void shouldThrowUserNotFoundException_WhenUserNotInRepository() {
+            // Arrange
+            when(userRepository.existsByUsername(USERNAME)).thenReturn(false);
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.getAuthenticatedUserProfile(validUser))
+                    .isInstanceOf(UserNotFoundException.class).hasMessage("Usuário não encontrado");
+
+            verify(userRepository).existsByUsername(USERNAME);
+        }
+    }
+
+    // ========================================================================
+    // TESTS: registerUser()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("registerUser() - Registrar novo usuário")
+    class RegisterUserTests {
+
+        @Test
+        @DisplayName("Deveria criar usuário com todos os campos configurados corretamente")
+        void shouldCreateUser_WithAllFieldsSetCorrectly() {
+            // Arrange
+            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
+            when(userRepository.save(any(User.class))).thenReturn(validUser);
+
+            ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+
+            // Act
+            userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
+
+            // Assert
+            verify(userRepository).save(captor.capture());
+            User capturedUser = captor.getValue();
+
+            assertThat(capturedUser.getUsername()).isEqualTo(USERNAME);
+            assertThat(capturedUser.getPassword()).isEqualTo(ENCODED_PASSWORD);
+            assertThat(capturedUser.getEmail()).isEqualTo(EMAIL);
+            assertThat(capturedUser.getRole()).isEqualTo(userRole);
+        }
+
+        @Test
+        @DisplayName("Deveria buscar ROLE_USER do repositório")
+        void shouldFetchRoleUser_FromRepository() {
+            // Arrange
+            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
+            when(userRepository.save(any(User.class))).thenReturn(validUser);
+
+            // Act
+            userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
+
+            // Assert
+            verify(roleRepository).findByAuthority("ROLE_USER");
+        }
+
+        @Test
+        @DisplayName("Deveria salvar usuário e retornar usuário salvo")
+        void shouldSaveUser_AndReturnSavedUser() {
+            // Arrange
+            when(roleRepository.findByAuthority("ROLE_USER")).thenReturn(userRole);
+            when(userRepository.save(any(User.class))).thenReturn(validUser);
+
+            // Act
+            User result = userService.registerUser(USERNAME, ENCODED_PASSWORD, EMAIL);
+
+            // Assert
+            assertThat(result).isNotNull().isEqualTo(validUser);
+            verify(userRepository).save(any(User.class));
+        }
+    }
+
+    // ========================================================================
+    // TESTS: setNewPassword()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("setNewPassword() - Atualizar senha do usuário (sem verificação de senha antiga)")
+    class SetNewPasswordTests {
+
+        @Test
+        @DisplayName("Deveria encodar e atualizar senha do usuário")
+        void shouldEncodeAndUpdateUserPassword() {
+            // Arrange
+            when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(ENCODED_NEW_PASSWORD);
+            when(userRepository.save(validUser)).thenReturn(validUser);
+
+            // Act
+            userService.setNewPassword(validUser, NEW_PASSWORD);
+
+            // Assert
+            assertThat(validUser.getPassword()).isEqualTo(ENCODED_NEW_PASSWORD);
+            verify(passwordEncoder).encode(NEW_PASSWORD);
+            verify(userRepository).save(validUser);
+        }
+
+        @Test
+        @DisplayName("Deveria salvar usuário após atualizar senha")
+        void shouldSaveUser_AfterUpdatingPassword() {
+            // Arrange
+            when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(ENCODED_NEW_PASSWORD);
+            when(userRepository.save(validUser)).thenReturn(validUser);
+
+            // Act
+            userService.setNewPassword(validUser, NEW_PASSWORD);
+
+            // Assert
+            verify(userRepository).save(validUser);
+        }
+    }
+
+    // ========================================================================
+    // TESTS: updatePassword()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("updatePassword() - Atualizar senha com validação de senha antiga")
+    class UpdatePasswordTests {
+
+        @Test
+        @DisplayName("Deveria lançar WrongPasswordException quando senha antiga está incorreta")
+        void shouldThrowWrongPasswordException_WhenOldPasswordIsIncorrect() {
+            // Arrange
+            String wrongOldPassword = "wrongPassword";
+            when(passwordEncoder.encode(wrongOldPassword)).thenReturn("$2a$10$wrong");
+
+            // Act & Assert
+            assertThatThrownBy(
+                    () -> userService.updatePassword(validUser, NEW_PASSWORD, wrongOldPassword))
+                            .isInstanceOf(WrongPasswordException.class)
+                            .hasMessage("Senha atual incorreta");
+
+            verify(userRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Deveria atualizar senha quando senha antiga está correta")
+        void shouldUpdatePassword_WhenOldPasswordIsCorrect() {
+            // Arrange
+            when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
+            when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(ENCODED_NEW_PASSWORD);
+            when(userRepository.save(validUser)).thenReturn(validUser);
+
+            // Act
+            userService.updatePassword(validUser, NEW_PASSWORD, PASSWORD);
+
+            // Assert
+            assertThat(validUser.getPassword()).isEqualTo(ENCODED_NEW_PASSWORD);
+            verify(userRepository).save(validUser);
+        }
+    }
+
+    // ========================================================================
+    // TESTS: requestEmailChange()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("requestEmailChange() - Solicitar mudança de email")
+    class RequestEmailChangeTests {
+
+        @Test
+        @DisplayName("Deveria lançar EmailAlreadyTakenException quando novo email é o mesmo que o atual")
+        void shouldThrowEmailAlreadyTakenException_WhenNewEmailIsSameAsCurrent() {
+            // Act & Assert
+            assertThatThrownBy(() -> userService.requestEmailChange(validUser, EMAIL))
+                    .isInstanceOf(EmailAlreadyTakenException.class)
+                    .hasMessage("Este já é seu email atual");
+
+            verify(verificationService, never()).sendEmailChangeVerification(any(), any());
+        }
+
+        @Test
+        @DisplayName("Deveria lançar EmailAlreadyTakenException quando novo email já está em uso")
+        void shouldThrowEmailAlreadyTakenException_WhenNewEmailIsAlreadyTaken() {
+            // Arrange
+            when(userRepository.existsByEmailAndVerified(NEW_EMAIL)).thenReturn(true);
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.requestEmailChange(validUser, NEW_EMAIL))
+                    .isInstanceOf(EmailAlreadyTakenException.class)
+                    .hasMessage("Email já está em uso");
+
+            verify(verificationService, never()).sendEmailChangeVerification(any(), any());
+        }
+
+        @Test
+        @DisplayName("Deveria enviar verificação de mudança de email quando novo email é válido")
+        void shouldSendEmailChangeVerification_WhenNewEmailIsValid() {
+            // Arrange
+            when(userRepository.existsByEmailAndVerified(NEW_EMAIL)).thenReturn(false);
+
+            // Act
+            userService.requestEmailChange(validUser, NEW_EMAIL);
+
+            // Assert
+            verify(verificationService).sendEmailChangeVerification(validUser, NEW_EMAIL);
+        }
+    }
+
+    // ========================================================================
+    // TESTS: confirmEmailChange()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("confirmEmailChange() - Confirmar mudança de email")
+    class ConfirmEmailChangeTests {
+
+        private VerificationToken emailChangeToken;
+
+        @BeforeEach
+        void setUp() {
+            emailChangeToken = new VerificationToken();
+            emailChangeToken.setToken(TOKEN);
+            emailChangeToken.setUser(validUser);
+            emailChangeToken.setType(TokenType.EMAIL_CHANGE);
+            emailChangeToken.setPendingEmail(NEW_EMAIL);
+            emailChangeToken.setExpiryDate(LocalDateTime.now().plusHours(1));
+        }
+
+        @Test
+        @DisplayName("Deveria validar token com tipo EMAIL_CHANGE")
+        void shouldValidateToken_WithEmailChangeType() {
+            // Arrange
+            when(verificationService.validateToken(TOKEN, TokenType.EMAIL_CHANGE))
+                    .thenReturn(emailChangeToken);
+            when(userRepository.existsByEmailAndVerified(NEW_EMAIL)).thenReturn(false);
+            when(userRepository.save(validUser)).thenReturn(validUser);
+
+            // Act
+            userService.confirmEmailChange(validUser, TOKEN);
+
+            // Assert
+            verify(verificationService).validateToken(TOKEN, TokenType.EMAIL_CHANGE);
+        }
+
+        @Test
+        @DisplayName("Deveria lançar exceção quando token não pertence ao usuário autenticado")
+        void shouldThrowException_WhenTokenDoesNotBelongToAuthenticatedUser() {
+            // Arrange
+            User anotherUser = new User();
+            anotherUser.setId(2L);
+            anotherUser.setUsername("anotheruser");
+            anotherUser.setEmail("another@example.com");
+
+            emailChangeToken.setUser(anotherUser);
+
+            when(verificationService.validateToken(TOKEN, TokenType.EMAIL_CHANGE))
+                    .thenReturn(emailChangeToken);
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.confirmEmailChange(validUser, TOKEN))
+                    .isInstanceOf(LoggedUserAndChangeEmailTokenMismatchException.class)
+                    .hasMessage("Token de troca de email não pertence ao usuário autenticado");
+        }
+
+        @Test
+        @DisplayName("Deveria atualizar email e deletar token quando confirmação é bem-sucedida")
+        void shouldUpdateEmailAndDeleteToken_WhenConfirmationIsSuccessful() {
+            // Arrange
+            when(verificationService.validateToken(TOKEN, TokenType.EMAIL_CHANGE))
+                    .thenReturn(emailChangeToken);
+            when(userRepository.existsByEmailAndVerified(NEW_EMAIL)).thenReturn(false);
+            when(userRepository.save(validUser)).thenReturn(validUser);
+
+            // Act
+            String result = userService.confirmEmailChange(validUser, TOKEN);
+
+            // Assert
+            assertThat(result).isEqualTo(NEW_EMAIL);
+            assertThat(validUser.getEmail()).isEqualTo(NEW_EMAIL);
+            verify(userRepository).save(validUser);
+            verify(verificationService).deleteByUserIdAndType(validUser.getId(),
+                    TokenType.EMAIL_CHANGE);
+        }
+    }
+
+    // ========================================================================
+    // TESTS: validateNewEmail()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("validateNewEmail() - Validar novo email")
+    class ValidateNewEmailTests {
+
+        @Test
+        @DisplayName("Deveria lançar exceção quando novo email é igual ao atual (case-insensitive)")
+        void shouldThrowException_WhenNewEmailIsSameAsCurrent() {
+            // Act & Assert
+            assertThatThrownBy(() -> userService.validateNewEmail(validUser, EMAIL))
+                    .isInstanceOf(EmailAlreadyTakenException.class)
+                    .hasMessage("Este já é seu email atual");
+
+            assertThatThrownBy(() -> userService.validateNewEmail(validUser, EMAIL.toUpperCase()))
+                    .isInstanceOf(EmailAlreadyTakenException.class)
+                    .hasMessage("Este já é seu email atual");
+        }
+
+        @Test
+        @DisplayName("Deveria lançar exceção quando email já está verificado por outro usuário")
+        void shouldThrowException_WhenEmailIsAlreadyVerifiedByAnotherUser() {
+            // Arrange
+            when(userRepository.existsByEmailAndVerified(NEW_EMAIL)).thenReturn(true);
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.validateNewEmail(validUser, NEW_EMAIL))
+                    .isInstanceOf(EmailAlreadyTakenException.class)
+                    .hasMessage("Email já está em uso");
+        }
+
+        @Test
+        @DisplayName("Deveria passar validação quando novo email é válido")
+        void shouldPassValidation_WhenNewEmailIsValid() {
+            // Arrange
+            when(userRepository.existsByEmailAndVerified(NEW_EMAIL)).thenReturn(false);
+
+            // Act & Assert - não deve lançar exceção
+            org.junit.jupiter.api.Assertions
+                    .assertDoesNotThrow(() -> userService.validateNewEmail(validUser, NEW_EMAIL));
+        }
+    }
+
+    // ========================================================================
+    // TESTS: loadByUsername()
+    // ========================================================================
+
+    @Nested
+    @DisplayName("loadByUsername() - Carregar usuário por username")
+    class LoadByUsernameTests {
+
+        @Test
+        @DisplayName("Deveria retornar usuário quando username existe")
+        void shouldReturnUser_WhenUsernameExists() {
+            // Arrange
+            when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.of(validUser));
+
+            // Act
+            User result = userService.loadByUsername(USERNAME);
+
+            // Assert
+            assertThat(result).isNotNull().isEqualTo(validUser);
+            verify(userRepository).findByUsername(USERNAME);
+        }
+
+        @Test
+        @DisplayName("Deveria lançar UsernameNotFoundException quando username não existe")
+        void shouldThrowUsernameNotFoundException_WhenUsernameDoesNotExist() {
+            // Arrange
+            when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.loadByUsername(USERNAME))
+                    .isInstanceOf(UsernameNotFoundException.class)
+                    .hasMessageContaining("User not found: " + USERNAME);
+
+            verify(userRepository).findByUsername(USERNAME);
+        }
+    }
+
+    // ========================================================================
+    // TESTS: Utility methods
+    // ========================================================================
+
+    @Nested
+    @DisplayName("Métodos utilitários")
+    class UtilityMethodsTests {
+
+        @Test
+        @DisplayName("existsByUsername() - Deveria retornar true quando username existe")
+        void existsByUsername_ShouldReturnTrue_WhenUsernameExists() {
+            // Arrange
+            when(userRepository.existsByUsername(USERNAME)).thenReturn(true);
+
+            // Act
+            boolean result = userService.existsByUsername(USERNAME);
+
+            // Assert
+            assertThat(result).isTrue();
+            verify(userRepository).existsByUsername(USERNAME);
+        }
+
+        @Test
+        @DisplayName("existsByEmail() - Deveria retornar true quando email existe")
+        void existsByEmail_ShouldReturnTrue_WhenEmailExists() {
+            // Arrange
+            when(userRepository.existsByEmail(EMAIL)).thenReturn(true);
+
+            // Act
+            boolean result = userService.existsByEmail(EMAIL);
+
+            // Assert
+            assertThat(result).isTrue();
+            verify(userRepository).existsByEmail(EMAIL);
+        }
+
+        @Test
+        @DisplayName("findByEmail() - Deveria retornar usuário quando email existe")
+        void findByEmail_ShouldReturnUser_WhenEmailExists() {
+            // Arrange
+            when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(validUser));
+
+            // Act
+            User result = userService.findByEmail(EMAIL);
+
+            // Assert
+            assertThat(result).isNotNull().isEqualTo(validUser);
+            verify(userRepository).findByEmail(EMAIL);
+        }
+
+        @Test
+        @DisplayName("findByEmail() - Deveria lançar exceção quando email não existe")
+        void findByEmail_ShouldThrowException_WhenEmailDoesNotExist() {
+            // Arrange
+            when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.findByEmail(EMAIL))
+                    .isInstanceOf(UserNotFoundException.class)
+                    .hasMessageContaining("User not found: " + EMAIL);
+        }
+
+        @Test
+        @DisplayName("updateEmail() - Deveria atualizar email e salvar usuário")
+        void updateEmail_ShouldUpdateEmailAndSaveUser() {
+            // Arrange
+            when(userRepository.save(validUser)).thenReturn(validUser);
+
+            // Act
+            userService.updateEmail(validUser, NEW_EMAIL);
+
+            // Assert
+            assertThat(validUser.getEmail()).isEqualTo(NEW_EMAIL);
+            verify(userRepository).save(validUser);
+        }
+
+        @Test
+        @DisplayName("cleanupExpiredUnverifiedUsers() - Deveria chamar repositório com data correta")
+        void cleanupExpiredUnverifiedUsers_ShouldCallRepositoryWithCorrectDate() {
+            // Arrange
+            int daysToExpire = 7;
+            when(userRepository.deleteExpiredUnverifiedUsers(any(LocalDateTime.class)))
+                    .thenReturn(5);
+
+            // Act
+            int result = userService.cleanupExpiredUnverifiedUsers(daysToExpire);
+
+            // Assert
+            assertThat(result).isEqualTo(5);
+            verify(userRepository).deleteExpiredUnverifiedUsers(any(LocalDateTime.class));
+        }
+    }
+}
