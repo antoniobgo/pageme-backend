@@ -1,4 +1,4 @@
-package com.atwo.paganois.auth.exceptions;
+package com.atwo.paganois.shared.exceptions;
 
 public class TokenNotFoundException extends RuntimeException {
     public TokenNotFoundException(String message) {

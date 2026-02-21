@@ -9,11 +9,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.atwo.paganois.auth.entities.TokenType;
 import com.atwo.paganois.auth.entities.VerificationToken;
-import com.atwo.paganois.auth.exceptions.ExpiredTokenException;
-import com.atwo.paganois.auth.exceptions.InvalidTokenTypeException;
-import com.atwo.paganois.auth.exceptions.TokenNotFoundException;
 import com.atwo.paganois.auth.repositories.VerificationTokenRepository;
 import com.atwo.paganois.email.services.EmailService;
+import com.atwo.paganois.shared.exceptions.ExpiredTokenException;
+import com.atwo.paganois.shared.exceptions.InvalidTokenTypeException;
+import com.atwo.paganois.shared.exceptions.TokenNotFoundException;
 import com.atwo.paganois.user.entities.User;
 import jakarta.transaction.Transactional;
 

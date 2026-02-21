@@ -17,16 +17,16 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import com.atwo.paganois.auth.exceptions.EmailAlreadyTakenException;
-import com.atwo.paganois.auth.exceptions.ExpiredTokenException;
-import com.atwo.paganois.auth.exceptions.InvalidTokenException;
-import com.atwo.paganois.auth.exceptions.InvalidTokenTypeException;
-import com.atwo.paganois.auth.exceptions.LoggedUserAndChangeEmailTokenMismatchException;
-import com.atwo.paganois.auth.exceptions.TokenNotFoundException;
-import com.atwo.paganois.auth.exceptions.UserAlreadyExistsException;
-import com.atwo.paganois.auth.exceptions.UserNotVerifiedOrNotEnabledException;
-import com.atwo.paganois.auth.exceptions.WrongPasswordException;
 import com.atwo.paganois.shared.dtos.CustomErrorResponse;
+import com.atwo.paganois.shared.exceptions.EmailAlreadyTakenException;
+import com.atwo.paganois.shared.exceptions.ExpiredTokenException;
+import com.atwo.paganois.shared.exceptions.InvalidTokenException;
+import com.atwo.paganois.shared.exceptions.InvalidTokenTypeException;
+import com.atwo.paganois.shared.exceptions.LoggedUserAndChangeEmailTokenMismatchException;
+import com.atwo.paganois.shared.exceptions.TokenNotFoundException;
+import com.atwo.paganois.shared.exceptions.UserAlreadyExistsException;
+import com.atwo.paganois.shared.exceptions.UserNotVerifiedOrNotEnabledException;
+import com.atwo.paganois.shared.exceptions.WrongPasswordException;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
