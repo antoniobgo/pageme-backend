@@ -16,6 +16,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.atwo.paganois.auth.exceptions.EmailAlreadyTakenException;
 import com.atwo.paganois.auth.exceptions.ExpiredTokenException;
 import com.atwo.paganois.auth.exceptions.InvalidTokenException;
 import com.atwo.paganois.auth.exceptions.InvalidTokenTypeException;
@@ -122,7 +123,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(LoggedUserAndChangeEmailTokenMismatchException.class)
     public ResponseEntity<CustomErrorResponse> handleLoggedUserAndChangeEmailTokenMismatchException(
             LoggedUserAndChangeEmailTokenMismatchException e, HttpServletRequest request) {
-        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
+                e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(EmailAlreadyTakenException.class)
+    public ResponseEntity<CustomErrorResponse> handleEmailAlreadyTakenException(
+            EmailAlreadyTakenException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.CONFLICT;
         CustomErrorResponse err = new CustomErrorResponse(Instant.now(), status.value(),
                 e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(err);
