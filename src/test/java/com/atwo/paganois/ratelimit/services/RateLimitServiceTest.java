@@ -43,7 +43,7 @@ class RateLimitServiceTest {
         when(config.getRegister()).thenReturn(new EndpointLimit(3, 3, 60));
         when(config.getForgotPassword()).thenReturn(new EndpointLimit(3, 3, 60));
         when(config.getResendVerification()).thenReturn(new EndpointLimit(3, 3, 60));
-        when(config.getGeneral()).thenReturn(new EndpointLimit(100, 100, 1));
+        when(config.getGeneral()).thenReturn(new EndpointLimit(40, 40, 1));
         when(config.getCacheMaxSize()).thenReturn(10000);
         when(config.getCacheExpireMinutes()).thenReturn(60);
 
@@ -268,22 +268,20 @@ class RateLimitServiceTest {
 
             // Assert
             assertThat(result.allowed()).isTrue();
-            assertThat(result.remainingTokens()).isEqualTo(99); // 100 - 1 = 99
+            assertThat(result.remainingTokens()).isEqualTo(39);
         }
 
         @Test
         @DisplayName("Deveria permitir muitas requisições (capacidade alta)")
         void shouldAllow_ManyRequests() {
-            // Act - Consome 50 tokens
-            for (int i = 0; i < 50; i++) {
+            for (int i = 0; i < 20; i++) {
                 RateLimitResult result = rateLimitService.tryConsumeGeneral(IP_ADDRESS);
                 assertThat(result.allowed()).isTrue();
             }
 
-            // Assert - Ainda deve ter tokens restantes
             RateLimitResult result = rateLimitService.tryConsumeGeneral(IP_ADDRESS);
             assertThat(result.allowed()).isTrue();
-            assertThat(result.remainingTokens()).isEqualTo(49); // 100 - 51 = 49
+            assertThat(result.remainingTokens()).isEqualTo(19); // 40 - 21 = 19
         }
     }
 
@@ -376,7 +374,7 @@ class RateLimitServiceTest {
             // Assert - Capacidades diferentes
             assertThat(loginResult.remainingTokens()).isEqualTo(4); // capacity: 5
             assertThat(registerResult.remainingTokens()).isEqualTo(2); // capacity: 3
-            assertThat(generalResult.remainingTokens()).isEqualTo(99); // capacity: 100
+            assertThat(generalResult.remainingTokens()).isEqualTo(39); // capacity: 100
         }
     }
 
