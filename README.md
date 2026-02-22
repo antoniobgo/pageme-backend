@@ -6,9 +6,9 @@ Sistema de autenticação e autorização RESTful construído com Spring Boot 3 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen?style=flat&logo=spring)](https://spring.io/projects/spring-boot)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-### Link para teste da API via Swagger: 
-https://auth-jwt-system.up.railway.app/swagger-ui/index.html
+### Link para teste da API via Swagger:
 
+https://auth-jwt-system.up.railway.app/swagger-ui/index.html
 
 ## Índice
 
@@ -326,6 +326,17 @@ Content-Type: application/json
 }
 ```
 
+**Resposta 200 OK:**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 900000
+}
+```
+
 #### Verificar Email
 
 ```http
@@ -362,7 +373,7 @@ Content-Type: application/json
 #### Solicitar Reset de Senha
 
 ```http
-POST /auth/forgot-password
+PATCH /auth/forgot-password
 Content-Type: application/json
 
 {
@@ -370,7 +381,7 @@ Content-Type: application/json
 }
 ```
 
-**Resposta 200 OK:**
+**Resposta 202 OK:**
 
 ```json
 {
@@ -395,6 +406,29 @@ Content-Type: application/json
 ### Usuários (Protegido)
 
 Todos os endpoints abaixo requerem autenticação via Bearer Token.
+
+#### Logout (Dispositivo Único)
+
+```http
+POST /auth/logout
+Authorization: Bearer {ACCESS_TOKEN}
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+**Resposta 204 No Content**
+
+#### Logout de Todos os Dispositivos
+
+```http
+POST /auth/logout-all
+Authorization: Bearer {ACCESS_TOKEN}
+```
+
+**Resposta 204 No Content**
 
 #### Obter Perfil
 
@@ -422,7 +456,7 @@ Authorization: Bearer {ACCESS_TOKEN}
 #### Alterar Senha
 
 ```http
-POST /api/users/me/password
+PATCH /api/users/me/password
 Authorization: Bearer {ACCESS_TOKEN}
 Content-Type: application/json
 
@@ -437,7 +471,7 @@ Content-Type: application/json
 #### Solicitar Mudança de Email
 
 ```http
-POST /api/users/me/email
+PATCH /api/users/me/email
 Authorization: Bearer {ACCESS_TOKEN}
 Content-Type: application/json
 
@@ -500,13 +534,13 @@ Cada endereço IP possui um "bucket" de tokens:
 
 ### Limites Configurados
 
-| Endpoint                    | Capacidade      | Recarga    | Período  |
-| --------------------------- | --------------- | ---------- | -------- |
-| `/auth/login`               | 5 requisições   | 5 tokens   | 1 minuto |
-| `/auth/register`            | 3 requisições   | 3 tokens   | 1 hora   |
-| `/auth/forgot-password`     | 3 requisições   | 3 tokens   | 1 hora   |
-| `/auth/resend-verification` | 3 requisições   | 3 tokens   | 1 hora   |
-| `/api/**` (geral)           | 100 requisições | 100 tokens | 1 minuto |
+| Endpoint                    | Capacidade     | Recarga   | Período  |
+| --------------------------- | -------------- | --------- | -------- |
+| `/auth/login`               | 5 requisições  | 5 tokens  | 1 minuto |
+| `/auth/register`            | 3 requisições  | 3 tokens  | 1 hora   |
+| `/auth/forgot-password`     | 3 requisições  | 3 tokens  | 1 hora   |
+| `/auth/resend-verification` | 3 requisições  | 3 tokens  | 1 hora   |
+| `/api/**` (geral)           | 40 requisições | 40 tokens | 1 minuto |
 
 ### Headers de Resposta
 

@@ -105,7 +105,7 @@ public class AuthController {
             O refresh token antigo será **invalidado** após uso.
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "✅ Tokens renovados com sucesso",
@@ -262,14 +262,14 @@ public class AuthController {
             - Letra maiúscula, minúscula, número e caractere especial
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({@ApiResponse(responseCode = "204", description = "Senha redefinida com sucesso"),
             @ApiResponse(responseCode = "400",
                     description = "Token inválido ou senha não atende requisitos",
                     content = @Content(
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
-            @ApiResponse(responseCode = "404", description = "🔍 Token não encontrado",
+            @ApiResponse(responseCode = "404", description = "Token não encontrado",
                     content = @Content(
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "410", description = "Token expirado", content = @Content(
@@ -300,7 +300,7 @@ public class AuthController {
             O usuário poderá fazer login normalmente.
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({
             @ApiResponse(responseCode = "200",
@@ -335,7 +335,7 @@ public class AuthController {
             Requer access token válido no header Authorization.
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({@ApiResponse(responseCode = "204", description = "Logout realizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Refresh token inválido",
@@ -377,7 +377,7 @@ public class AuthController {
             Requer access token válido.
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({
             @ApiResponse(responseCode = "204",

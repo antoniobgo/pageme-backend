@@ -57,7 +57,7 @@ public class UserController {
             - Exibir informações do usuário na interface
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Perfil retornado com sucesso",
@@ -90,16 +90,14 @@ public class UserController {
             Requer access token válido.
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({@ApiResponse(responseCode = "204", description = "Senha alterada com sucesso"),
             @ApiResponse(responseCode = "400", description = "Nova senha não atende aos requisitos",
                     content = @Content(
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
-            @ApiResponse(responseCode = "401", description = "Token inválido ou ausente",
-                    content = @Content(
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
-            @ApiResponse(responseCode = "403", description = "Senha atual incorreta",
+            @ApiResponse(responseCode = "401",
+                    description = "Token inválido, ausente ou senha atual incorreta",
                     content = @Content(
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
@@ -130,7 +128,7 @@ public class UserController {
             Requer access token válido.
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({
             @ApiResponse(responseCode = "200",
@@ -170,7 +168,7 @@ public class UserController {
             Requer access token válido.
 
             ### Rate Limit
-            100 requisições por minuto (limite geral).
+            40 requisições por minuto (limite geral).
             """)
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Email alterado com sucesso!",
