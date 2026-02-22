@@ -73,10 +73,9 @@ public class UserService {
 
     @Transactional
     public void updatePassword(User user, String newPassword, String oldPassword) {
-        String encodedOldPassword = passwordEncoder.encode(oldPassword);
         String encodedNewPassword = passwordEncoder.encode(newPassword);
 
-        if (!user.getPassword().equals(encodedOldPassword))
+        if (!passwordEncoder.matches(oldPassword, user.getPassword()))
             throw new WrongPasswordException("Senha atual incorreta");
 
         user.setPassword(encodedNewPassword);
