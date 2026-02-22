@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.atwo.paganois.auth.entities.TokenType;
 import com.atwo.paganois.auth.entities.VerificationToken;
 import com.atwo.paganois.auth.repositories.VerificationTokenRepository;
@@ -15,7 +16,6 @@ import com.atwo.paganois.shared.exceptions.ExpiredTokenException;
 import com.atwo.paganois.shared.exceptions.InvalidTokenTypeException;
 import com.atwo.paganois.shared.exceptions.TokenNotFoundException;
 import com.atwo.paganois.user.entities.User;
-import jakarta.transaction.Transactional;
 
 @Service
 public class VerificationService {

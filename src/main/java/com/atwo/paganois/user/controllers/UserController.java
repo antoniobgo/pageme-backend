@@ -102,7 +102,7 @@ public class UserController {
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))})
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Void> updatePassword(@AuthenticationPrincipal User user,
-            @RequestBody UpdatePasswordRequest request) {
+            @Valid @RequestBody UpdatePasswordRequest request) {
         userService.updatePassword(user, request.newPassword(), request.oldPassword());
         return ResponseEntity.noContent().build();
     }

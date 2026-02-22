@@ -289,7 +289,9 @@ class UserServiceTest {
         void shouldThrowWrongPasswordException_WhenOldPasswordIsIncorrect() {
             // Arrange
             String wrongOldPassword = "wrongPassword";
-            when(passwordEncoder.encode(wrongOldPassword)).thenReturn("$2a$10$wrong");
+
+            when(passwordEncoder.matches(wrongOldPassword, validUser.getPassword()))
+                    .thenReturn(false);
 
             // Act & Assert
             assertThatThrownBy(
@@ -303,8 +305,8 @@ class UserServiceTest {
         @Test
         @DisplayName("Deveria atualizar senha quando senha antiga está correta")
         void shouldUpdatePassword_WhenOldPasswordIsCorrect() {
-            // Arrange
-            when(passwordEncoder.encode(PASSWORD)).thenReturn(ENCODED_PASSWORD);
+            when(passwordEncoder.matches(PASSWORD, validUser.getPassword())).thenReturn(true);
+
             when(passwordEncoder.encode(NEW_PASSWORD)).thenReturn(ENCODED_NEW_PASSWORD);
             when(userRepository.save(validUser)).thenReturn(validUser);
 
@@ -313,6 +315,7 @@ class UserServiceTest {
 
             // Assert
             assertThat(validUser.getPassword()).isEqualTo(ENCODED_NEW_PASSWORD);
+            verify(passwordEncoder).encode(NEW_PASSWORD);
             verify(userRepository).save(validUser);
         }
     }
